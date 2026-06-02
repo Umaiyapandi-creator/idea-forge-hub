@@ -79,14 +79,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Way to Dream — Where ideas become startups" },
+      { name: "description", content: "Where innovators, developers and investors build startups together — under one NDA-protected roof." },
+      { name: "author", content: "Way to Dream" },
+      { property: "og:title", content: "Way to Dream" },
+      { property: "og:description", content: "Where innovators, developers and investors build startups together." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
