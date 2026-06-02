@@ -1,14 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
-import { Rocket, Lightbulb, Code2, Briefcase, ShieldCheck } from "lucide-react";
+import { Lightbulb, Code2, Briefcase, ShieldCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { setSession, dashboardPathFor, type Role } from "@/lib/auth-store";
+import { supabase } from "@/integrations/supabase/client";
+import { dashboardPathFor, type Role } from "@/lib/auth-store";
+import { Logo } from "@/components/Logo";
 
 const searchSchema = z.object({
   tab: z.enum(["login", "signup"]).optional(),
@@ -18,8 +20,8 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in or sign up — Way to Dream" },
-      { name: "description", content: "Log in or create your Way to Dream account as an innovator, developer or investor." },
+      { title: "Login or Sign up — Way to Dream" },
+      { name: "description", content: "Log in or create your Way to Dream account." },
     ],
   }),
   validateSearch: (s) => searchSchema.parse(s),
@@ -53,8 +55,29 @@ function AuthPage() {
   const [agreed, setAgreed] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [showTerms, setShowTerms] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    let mounted = true;
+    const route = async (userId: string) => {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      const r = (roles?.[0]?.role as Role) ?? "innovator";
+      if (mounted) navigate({ to: dashboardPathFor(r) });
+    };
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) route(session.user.id);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session) route(session.user.id);
+    });
+    return () => { mounted = false; subscription.unsubscribe(); };
+  }, [navigate]);
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.email || !form.password || (tab === "signup" && !form.name)) {
       toast.error("Please fill in all fields");
@@ -64,13 +87,33 @@ function AuthPage() {
       toast.error("You must accept the Terms & NDA to continue");
       return;
     }
-    setSession({
-      name: form.name || form.email.split("@")[0],
-      email: form.email,
-      role,
-    });
-    toast.success(tab === "signup" ? "Account created" : "Welcome back");
-    navigate({ to: dashboardPathFor(role) });
+    setBusy(true);
+    try {
+      if (tab === "signup") {
+        const { error } = await supabase.auth.signUp({
+          email: form.email,
+          password: form.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth`,
+            data: { full_name: form.name, role },
+          },
+        });
+        if (error) throw error;
+        toast.success("Account created — welcome!");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: form.email,
+          password: form.password,
+        });
+        if (error) throw error;
+        toast.success("Welcome back");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Authentication failed";
+      toast.error(msg);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -78,12 +121,7 @@ function AuthPage() {
       <div className="container mx-auto grid min-h-screen items-center gap-8 px-6 py-10 lg:grid-cols-2">
         {/* Left brand panel */}
         <div className="hidden lg:block">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="grid h-9 w-9 place-items-center rounded-lg" style={{ backgroundImage: "var(--gradient-hero)" }}>
-              <Rocket className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold tracking-tight">Way to Dream</span>
-          </Link>
+          <Logo size={44} to="" />
           <h1 className="mt-12 text-4xl font-bold tracking-tight">
             Your ideas,{" "}
             <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>protected</span>.
@@ -93,20 +131,15 @@ function AuthPage() {
           </p>
           <div className="mt-10 flex items-center gap-3 rounded-xl border border-border bg-card/60 p-4 backdrop-blur">
             <ShieldCheck className="h-5 w-5 text-primary" />
-            <p className="text-sm text-muted-foreground">All projects are protected under platform NDA & moderation policies.</p>
+            <p className="text-sm text-muted-foreground">Passwords are encrypted. All projects are protected under platform NDA.</p>
           </div>
         </div>
 
         {/* Auth card */}
         <div className="mx-auto w-full max-w-md">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] md:p-8">
-            <div className="mb-6 flex items-center justify-between lg:hidden">
-              <Link to="/" className="flex items-center gap-2">
-                <div className="grid h-8 w-8 place-items-center rounded-lg" style={{ backgroundImage: "var(--gradient-hero)" }}>
-                  <Rocket className="h-4 w-4 text-primary-foreground" />
-                </div>
-                <span className="font-semibold">Way to Dream</span>
-              </Link>
+            <div className="mb-6 flex items-center justify-center lg:hidden">
+              <Logo size={36} to="" />
             </div>
 
             <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "signup")}>
@@ -154,7 +187,12 @@ function AuthPage() {
                   <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
                 </div>
                 <div>
-                  <Label htmlFor="password">Password</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    {tab === "login" && (
+                      <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
+                    )}
+                  </div>
                   <Input id="password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" />
                 </div>
 
@@ -178,8 +216,8 @@ function AuthPage() {
                   </div>
                 </TabsContent>
 
-                <Button type="submit" className="w-full" size="lg">
-                  {tab === "login" ? "Log in" : "Create account"}
+                <Button type="submit" className="w-full" size="lg" disabled={busy}>
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : tab === "login" ? "Log in" : "Create account"}
                 </Button>
 
                 <p className="text-center text-xs text-muted-foreground">
@@ -196,10 +234,6 @@ function AuthPage() {
               </form>
             </Tabs>
           </div>
-
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            <Link to="/" className="hover:text-foreground">← Back to home</Link>
-          </p>
         </div>
       </div>
     </div>
