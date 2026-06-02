@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as InvestorRouteImport } from './routes/investor'
 import { Route as InnovatorRouteImport } from './routes/innovator'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DeveloperRouteImport } from './routes/developer'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -18,6 +20,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectNewRouteImport } from './routes/project.new'
 import { Route as ProjectIdRouteImport } from './routes/project.$id'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InvestorRoute = InvestorRouteImport.update({
   id: '/investor',
   path: '/investor',
@@ -26,6 +33,11 @@ const InvestorRoute = InvestorRouteImport.update({
 const InnovatorRoute = InnovatorRouteImport.update({
   id: '/innovator',
   path: '/innovator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DeveloperRoute = DeveloperRouteImport.update({
@@ -64,8 +76,10 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/developer': typeof DeveloperRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/innovator': typeof InnovatorRoute
   '/investor': typeof InvestorRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
 }
@@ -74,8 +88,10 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/developer': typeof DeveloperRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/innovator': typeof InnovatorRoute
   '/investor': typeof InvestorRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
 }
@@ -85,8 +101,10 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/developer': typeof DeveloperRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/innovator': typeof InnovatorRoute
   '/investor': typeof InvestorRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
 }
@@ -97,8 +115,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/developer'
+    | '/forgot-password'
     | '/innovator'
     | '/investor'
+    | '/reset-password'
     | '/project/$id'
     | '/project/new'
   fileRoutesByTo: FileRoutesByTo
@@ -107,8 +127,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/developer'
+    | '/forgot-password'
     | '/innovator'
     | '/investor'
+    | '/reset-password'
     | '/project/$id'
     | '/project/new'
   id:
@@ -117,8 +139,10 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/developer'
+    | '/forgot-password'
     | '/innovator'
     | '/investor'
+    | '/reset-password'
     | '/project/$id'
     | '/project/new'
   fileRoutesById: FileRoutesById
@@ -128,14 +152,23 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   DeveloperRoute: typeof DeveloperRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   InnovatorRoute: typeof InnovatorRoute
   InvestorRoute: typeof InvestorRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ProjectIdRoute: typeof ProjectIdRoute
   ProjectNewRoute: typeof ProjectNewRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/investor': {
       id: '/investor'
       path: '/investor'
@@ -148,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/innovator'
       fullPath: '/innovator'
       preLoaderRoute: typeof InnovatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/developer': {
@@ -200,8 +240,10 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   DeveloperRoute: DeveloperRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   InnovatorRoute: InnovatorRoute,
   InvestorRoute: InvestorRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ProjectIdRoute: ProjectIdRoute,
   ProjectNewRoute: ProjectNewRoute,
 }

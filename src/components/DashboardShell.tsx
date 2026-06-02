@@ -1,53 +1,47 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Rocket, LogOut } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { LogOut, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { clearSession, getSession } from "@/lib/auth-store";
-import { useEffect, useState, type ReactNode } from "react";
+import { signOut, useAuth, type Role } from "@/lib/auth-store";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
+import { Logo } from "@/components/Logo";
 
 interface Props {
   title: string;
   subtitle?: string;
   actions?: ReactNode;
   children: ReactNode;
+  requireRole?: Role;
 }
 
-export function DashboardShell({ title, subtitle, actions, children }: Props) {
+export function DashboardShell({ title, subtitle, actions, children, requireRole }: Props) {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+  const { user, loading } = useAuth({ redirectIfUnauthed: true, requireRole });
 
-  useEffect(() => {
-    const s = getSession();
-    if (!s) {
-      navigate({ to: "/auth" });
-    } else {
-      setUser({ name: s.name, role: s.role });
-    }
-  }, [navigate]);
-
-  const logout = () => {
-    clearSession();
+  const logout = async () => {
+    await signOut();
     toast.success("Logged out");
-    navigate({ to: "/" });
+    navigate({ to: "/auth" });
   };
+
+  if (loading || !user) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="border-b border-border bg-background">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-6">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="grid h-8 w-8 place-items-center rounded-lg" style={{ backgroundImage: "var(--gradient-hero)" }}>
-              <Rocket className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold">Way to Dream</span>
-          </Link>
+          <Logo size={32} />
           <div className="flex items-center gap-3">
-            {user && (
-              <div className="hidden text-right text-sm md:block">
-                <div className="font-medium leading-tight">{user.name}</div>
-                <div className="text-xs capitalize text-muted-foreground">{user.role}</div>
-              </div>
-            )}
+            <div className="hidden text-right text-sm md:block">
+              <div className="font-medium leading-tight">{user.name}</div>
+              <div className="text-xs capitalize text-muted-foreground">{user.role}</div>
+            </div>
             <Button variant="ghost" size="sm" onClick={logout} className="gap-2">
               <LogOut className="h-4 w-4" /> Log out
             </Button>
@@ -64,6 +58,15 @@ export function DashboardShell({ title, subtitle, actions, children }: Props) {
         </div>
         {children}
       </main>
+      <footer className="border-t border-border bg-background py-6">
+        <div className="container mx-auto flex flex-col items-center justify-between gap-3 px-6 text-sm text-muted-foreground md:flex-row">
+          <div className="flex items-center gap-3">
+            <Logo size={24} showText={false} to="" />
+            <span>© {new Date().getFullYear()} Way to Dream</span>
+          </div>
+          <span>Protected by platform NDA</span>
+        </div>
+      </footer>
     </div>
   );
 }
