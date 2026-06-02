@@ -12,7 +12,7 @@ export const Route = createFileRoute("/project/$id")({
 
 function Page() {
   const { id } = Route.useParams();
-  const title = id.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const title = id.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
   return (
     <DashboardShell
       title={title}

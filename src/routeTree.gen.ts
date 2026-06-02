@@ -9,38 +9,168 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as InvestorRouteImport } from './routes/investor'
+import { Route as InnovatorRouteImport } from './routes/innovator'
+import { Route as DeveloperRouteImport } from './routes/developer'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProjectNewRouteImport } from './routes/project.new'
+import { Route as ProjectIdRouteImport } from './routes/project.$id'
 
+const InvestorRoute = InvestorRouteImport.update({
+  id: '/investor',
+  path: '/investor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InnovatorRoute = InnovatorRouteImport.update({
+  id: '/innovator',
+  path: '/innovator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeveloperRoute = DeveloperRouteImport.update({
+  id: '/developer',
+  path: '/developer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectNewRoute = ProjectNewRouteImport.update({
+  id: '/project/new',
+  path: '/project/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectIdRoute = ProjectIdRouteImport.update({
+  id: '/project/$id',
+  path: '/project/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/developer': typeof DeveloperRoute
+  '/innovator': typeof InnovatorRoute
+  '/investor': typeof InvestorRoute
+  '/project/$id': typeof ProjectIdRoute
+  '/project/new': typeof ProjectNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/developer': typeof DeveloperRoute
+  '/innovator': typeof InnovatorRoute
+  '/investor': typeof InvestorRoute
+  '/project/$id': typeof ProjectIdRoute
+  '/project/new': typeof ProjectNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/developer': typeof DeveloperRoute
+  '/innovator': typeof InnovatorRoute
+  '/investor': typeof InvestorRoute
+  '/project/$id': typeof ProjectIdRoute
+  '/project/new': typeof ProjectNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/developer'
+    | '/innovator'
+    | '/investor'
+    | '/project/$id'
+    | '/project/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/developer'
+    | '/innovator'
+    | '/investor'
+    | '/project/$id'
+    | '/project/new'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/developer'
+    | '/innovator'
+    | '/investor'
+    | '/project/$id'
+    | '/project/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  AuthRoute: typeof AuthRoute
+  DeveloperRoute: typeof DeveloperRoute
+  InnovatorRoute: typeof InnovatorRoute
+  InvestorRoute: typeof InvestorRoute
+  ProjectIdRoute: typeof ProjectIdRoute
+  ProjectNewRoute: typeof ProjectNewRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/investor': {
+      id: '/investor'
+      path: '/investor'
+      fullPath: '/investor'
+      preLoaderRoute: typeof InvestorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/innovator': {
+      id: '/innovator'
+      path: '/innovator'
+      fullPath: '/innovator'
+      preLoaderRoute: typeof InnovatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/developer': {
+      id: '/developer'
+      path: '/developer'
+      fullPath: '/developer'
+      preLoaderRoute: typeof DeveloperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +178,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/project/new': {
+      id: '/project/new'
+      path: '/project/new'
+      fullPath: '/project/new'
+      preLoaderRoute: typeof ProjectNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/project/$id': {
+      id: '/project/$id'
+      path: '/project/$id'
+      fullPath: '/project/$id'
+      preLoaderRoute: typeof ProjectIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  AuthRoute: AuthRoute,
+  DeveloperRoute: DeveloperRoute,
+  InnovatorRoute: InnovatorRoute,
+  InvestorRoute: InvestorRoute,
+  ProjectIdRoute: ProjectIdRoute,
+  ProjectNewRoute: ProjectNewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
