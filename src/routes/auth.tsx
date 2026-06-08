@@ -279,7 +279,7 @@ function AuthPage() {
                 </TabsContent>
 
                 <Button type="submit" className="w-full" size="lg" disabled={busy}>
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : tab === "login" ? "Log in" : "Create account"}
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "phone" ? (otpSent ? "Verify OTP" : "Send OTP") : tab === "login" ? "Log in" : "Create account"}
                 </Button>
 
                 <p className="text-center text-xs text-muted-foreground">
