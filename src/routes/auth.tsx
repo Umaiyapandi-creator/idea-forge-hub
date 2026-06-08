@@ -81,34 +81,56 @@ function AuthPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.email || !form.password || (tab === "signup" && !form.name)) {
-      toast.error("Please fill in all fields");
-      return;
-    }
     if (tab === "signup" && !agreed) {
       toast.error("You must accept the Terms & NDA to continue");
       return;
     }
     setBusy(true);
     try {
-      if (tab === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email: form.email,
-          password: form.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
-            data: { full_name: form.name, role },
-          },
-        });
-        if (error) throw error;
-        toast.success("Account created — welcome!");
+      if (mode === "phone") {
+        if (!form.phone) { toast.error("Enter your phone number"); return; }
+        if (!otpSent) {
+          const { error } = await supabase.auth.signInWithOtp({
+            phone: form.phone,
+            options: { data: { full_name: form.name || form.phone, role } },
+          });
+          if (error) throw error;
+          setOtpSent(true);
+          toast.success("OTP sent to your phone");
+        } else {
+          if (!form.otp) { toast.error("Enter the OTP"); return; }
+          const { error } = await supabase.auth.verifyOtp({
+            phone: form.phone,
+            token: form.otp,
+            type: "sms",
+          });
+          if (error) throw error;
+          toast.success("Welcome!");
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: form.email,
-          password: form.password,
-        });
-        if (error) throw error;
-        toast.success("Welcome back");
+        if (!form.email || !form.password || (tab === "signup" && !form.name)) {
+          toast.error("Please fill in all fields");
+          return;
+        }
+        if (tab === "signup") {
+          const { error } = await supabase.auth.signUp({
+            email: form.email,
+            password: form.password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/auth`,
+              data: { full_name: form.name, role },
+            },
+          });
+          if (error) throw error;
+          toast.success("Account created — welcome!");
+        } else {
+          const { error } = await supabase.auth.signInWithPassword({
+            email: form.email,
+            password: form.password,
+          });
+          if (error) throw error;
+          toast.success("Welcome back");
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Authentication failed";
