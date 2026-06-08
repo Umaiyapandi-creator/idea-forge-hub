@@ -212,19 +212,51 @@ function AuthPage() {
                   </div>
                 </TabsContent>
 
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => { setMode("email"); setOtpSent(false); }}
+                    className={`rounded-lg border p-2 text-xs font-medium transition ${mode === "email" ? "border-primary bg-primary/10" : "border-border bg-background text-muted-foreground"}`}>
+                    Email
+                  </button>
+                  <button type="button" onClick={() => { setMode("phone"); setOtpSent(false); }}
+                    className={`rounded-lg border p-2 text-xs font-medium transition ${mode === "phone" ? "border-primary bg-primary/10" : "border-border bg-background text-muted-foreground"}`}>
+                    Phone
+                  </button>
                 </div>
-                <div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    {tab === "login" && (
-                      <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
+
+                {mode === "email" ? (
+                  <>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="password">Password</Label>
+                        {tab === "login" && (
+                          <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
+                        )}
+                      </div>
+                      <Input id="password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <Label htmlFor="phone">Mobile number</Label>
+                      <Input id="phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 98765 43210" disabled={otpSent} />
+                      <p className="mt-1 text-[11px] text-muted-foreground">Include country code (e.g. +91).</p>
+                    </div>
+                    {otpSent && (
+                      <div>
+                        <Label htmlFor="otp">Enter OTP</Label>
+                        <Input id="otp" inputMode="numeric" value={form.otp} onChange={(e) => setForm({ ...form, otp: e.target.value })} placeholder="6-digit code" />
+                        <button type="button" onClick={() => setOtpSent(false)} className="mt-1 text-[11px] text-primary hover:underline">
+                          Change number
+                        </button>
+                      </div>
                     )}
-                  </div>
-                  <Input id="password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" />
-                </div>
+                  </>
+                )}
 
                 <TabsContent value="signup" className="mt-0 p-0">
                   <div className="rounded-lg border border-border bg-muted/40 p-3">
