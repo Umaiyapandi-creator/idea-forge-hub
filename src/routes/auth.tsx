@@ -31,7 +31,7 @@ export const Route = createFileRoute("/auth")({
 const TERMS = [
   "Users must provide accurate information during registration.",
   "Original creators retain ownership of their uploaded ideas and projects.",
-  "Way to Dream receives a 15% equity or revenue share from successful projects.",
+  "Way to Dream receives a 40% equity or revenue share from successful projects.",
   "Users must not copy, steal, or misuse other users' ideas.",
   "All uploaded files and project details are protected under platform policies.",
   "Developers and collaborators must follow NDA and confidentiality rules.",
@@ -53,7 +53,9 @@ function AuthPage() {
   const [tab, setTab] = useState<"login" | "signup">(search.tab ?? "login");
   const [role, setRole] = useState<Role>(search.role ?? "innovator");
   const [agreed, setAgreed] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", phone: "", otp: "" });
+  const [mode, setMode] = useState<"email" | "phone">("email");
+  const [otpSent, setOtpSent] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -79,34 +81,56 @@ function AuthPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.email || !form.password || (tab === "signup" && !form.name)) {
-      toast.error("Please fill in all fields");
-      return;
-    }
     if (tab === "signup" && !agreed) {
       toast.error("You must accept the Terms & NDA to continue");
       return;
     }
     setBusy(true);
     try {
-      if (tab === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email: form.email,
-          password: form.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
-            data: { full_name: form.name, role },
-          },
-        });
-        if (error) throw error;
-        toast.success("Account created — welcome!");
+      if (mode === "phone") {
+        if (!form.phone) { toast.error("Enter your phone number"); return; }
+        if (!otpSent) {
+          const { error } = await supabase.auth.signInWithOtp({
+            phone: form.phone,
+            options: { data: { full_name: form.name || form.phone, role } },
+          });
+          if (error) throw error;
+          setOtpSent(true);
+          toast.success("OTP sent to your phone");
+        } else {
+          if (!form.otp) { toast.error("Enter the OTP"); return; }
+          const { error } = await supabase.auth.verifyOtp({
+            phone: form.phone,
+            token: form.otp,
+            type: "sms",
+          });
+          if (error) throw error;
+          toast.success("Welcome!");
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: form.email,
-          password: form.password,
-        });
-        if (error) throw error;
-        toast.success("Welcome back");
+        if (!form.email || !form.password || (tab === "signup" && !form.name)) {
+          toast.error("Please fill in all fields");
+          return;
+        }
+        if (tab === "signup") {
+          const { error } = await supabase.auth.signUp({
+            email: form.email,
+            password: form.password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/auth`,
+              data: { full_name: form.name, role },
+            },
+          });
+          if (error) throw error;
+          toast.success("Account created — welcome!");
+        } else {
+          const { error } = await supabase.auth.signInWithPassword({
+            email: form.email,
+            password: form.password,
+          });
+          if (error) throw error;
+          toast.success("Welcome back");
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Authentication failed";
@@ -122,11 +146,13 @@ function AuthPage() {
         {/* Left brand panel */}
         <div className="hidden lg:block">
           <Logo size={44} to="" />
-          <h1 className="mt-12 text-4xl font-bold tracking-tight">
-            Your ideas,{" "}
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>protected</span>.
+          <h1 className="mt-10 text-5xl font-bold tracking-tight">
+            Way To <span className="text-primary">Dream</span>
           </h1>
-          <p className="mt-4 max-w-md text-muted-foreground">
+          <p className="mt-2 text-sm font-medium tracking-widest text-muted-foreground">
+            INNOVATE · INSPIRE · ACHIEVE
+          </p>
+          <p className="mt-6 max-w-md text-muted-foreground">
             One account to upload ideas, recruit a dev team, or invest in vetted startups — under a single NDA-backed roof.
           </p>
           <div className="mt-10 flex items-center gap-3 rounded-xl border border-border bg-card/60 p-4 backdrop-blur">
@@ -138,8 +164,12 @@ function AuthPage() {
         {/* Auth card */}
         <div className="mx-auto w-full max-w-md">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] md:p-8">
-            <div className="mb-6 flex items-center justify-center lg:hidden">
-              <Logo size={36} to="" />
+            <div className="mb-4 flex flex-col items-center gap-2 lg:hidden">
+              <Logo size={40} to="" />
+              <div className="text-center">
+                <h2 className="text-2xl font-bold">Way To <span className="text-primary">Dream</span></h2>
+                <p className="text-[11px] tracking-widest text-muted-foreground">INNOVATE · INSPIRE · ACHIEVE</p>
+              </div>
             </div>
 
             <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "signup")}>
@@ -182,19 +212,51 @@ function AuthPage() {
                   </div>
                 </TabsContent>
 
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => { setMode("email"); setOtpSent(false); }}
+                    className={`rounded-lg border p-2 text-xs font-medium transition ${mode === "email" ? "border-primary bg-primary/10" : "border-border bg-background text-muted-foreground"}`}>
+                    Email
+                  </button>
+                  <button type="button" onClick={() => { setMode("phone"); setOtpSent(false); }}
+                    className={`rounded-lg border p-2 text-xs font-medium transition ${mode === "phone" ? "border-primary bg-primary/10" : "border-border bg-background text-muted-foreground"}`}>
+                    Phone
+                  </button>
                 </div>
-                <div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    {tab === "login" && (
-                      <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
+
+                {mode === "email" ? (
+                  <>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="password">Password</Label>
+                        {tab === "login" && (
+                          <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
+                        )}
+                      </div>
+                      <Input id="password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <Label htmlFor="phone">Mobile number</Label>
+                      <Input id="phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 98765 43210" disabled={otpSent} />
+                      <p className="mt-1 text-[11px] text-muted-foreground">Include country code (e.g. +91).</p>
+                    </div>
+                    {otpSent && (
+                      <div>
+                        <Label htmlFor="otp">Enter OTP</Label>
+                        <Input id="otp" inputMode="numeric" value={form.otp} onChange={(e) => setForm({ ...form, otp: e.target.value })} placeholder="6-digit code" />
+                        <button type="button" onClick={() => setOtpSent(false)} className="mt-1 text-[11px] text-primary hover:underline">
+                          Change number
+                        </button>
+                      </div>
                     )}
-                  </div>
-                  <Input id="password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" />
-                </div>
+                  </>
+                )}
 
                 <TabsContent value="signup" className="mt-0 p-0">
                   <div className="rounded-lg border border-border bg-muted/40 p-3">
@@ -217,7 +279,7 @@ function AuthPage() {
                 </TabsContent>
 
                 <Button type="submit" className="w-full" size="lg" disabled={busy}>
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : tab === "login" ? "Log in" : "Create account"}
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "phone" ? (otpSent ? "Verify OTP" : "Send OTP") : tab === "login" ? "Log in" : "Create account"}
                 </Button>
 
                 <p className="text-center text-xs text-muted-foreground">
