@@ -53,7 +53,9 @@ function AuthPage() {
   const [tab, setTab] = useState<"login" | "signup">(search.tab ?? "login");
   const [role, setRole] = useState<Role>(search.role ?? "innovator");
   const [agreed, setAgreed] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", phone: "", otp: "" });
+  const [mode, setMode] = useState<"email" | "phone">("email");
+  const [otpSent, setOtpSent] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [busy, setBusy] = useState(false);
 
