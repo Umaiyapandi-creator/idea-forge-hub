@@ -146,11 +146,13 @@ function AuthPage() {
         {/* Left brand panel */}
         <div className="hidden lg:block">
           <Logo size={44} to="" />
-          <h1 className="mt-12 text-4xl font-bold tracking-tight">
-            Your ideas,{" "}
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>protected</span>.
+          <h1 className="mt-10 text-5xl font-bold tracking-tight">
+            Way To <span className="text-primary">Dream</span>
           </h1>
-          <p className="mt-4 max-w-md text-muted-foreground">
+          <p className="mt-2 text-sm font-medium tracking-widest text-muted-foreground">
+            INNOVATE · INSPIRE · ACHIEVE
+          </p>
+          <p className="mt-6 max-w-md text-muted-foreground">
             One account to upload ideas, recruit a dev team, or invest in vetted startups — under a single NDA-backed roof.
           </p>
           <div className="mt-10 flex items-center gap-3 rounded-xl border border-border bg-card/60 p-4 backdrop-blur">
@@ -162,8 +164,12 @@ function AuthPage() {
         {/* Auth card */}
         <div className="mx-auto w-full max-w-md">
           <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-elegant)] md:p-8">
-            <div className="mb-6 flex items-center justify-center lg:hidden">
-              <Logo size={36} to="" />
+            <div className="mb-4 flex flex-col items-center gap-2 lg:hidden">
+              <Logo size={40} to="" />
+              <div className="text-center">
+                <h2 className="text-2xl font-bold">Way To <span className="text-primary">Dream</span></h2>
+                <p className="text-[11px] tracking-widest text-muted-foreground">INNOVATE · INSPIRE · ACHIEVE</p>
+              </div>
             </div>
 
             <Tabs value={tab} onValueChange={(v) => setTab(v as "login" | "signup")}>
