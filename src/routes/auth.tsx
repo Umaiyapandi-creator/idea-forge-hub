@@ -31,7 +31,7 @@ export const Route = createFileRoute("/auth")({
 const TERMS = [
   "Users must provide accurate information during registration.",
   "Original creators retain ownership of their uploaded ideas and projects.",
-  "Way to Dream receives a 15% equity or revenue share from successful projects.",
+  "Way to Dream receives a 40% equity or revenue share from successful projects.",
   "Users must not copy, steal, or misuse other users' ideas.",
   "All uploaded files and project details are protected under platform policies.",
   "Developers and collaborators must follow NDA and confidentiality rules.",
