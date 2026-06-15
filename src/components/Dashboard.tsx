@@ -153,6 +153,7 @@ export function Dashboard() {
 
   const navItems: { id: Section; label: string; icon: typeof User }[] = [
     { id: "profile", label: "Profile", icon: User },
+    { id: "projects", label: "Projects", icon: FolderKanban },
     { id: "directors", label: "Directors", icon: Award },
     { id: "founders", label: "Founders", icon: Award },
     { id: "feedback", label: "Feedback", icon: MessageSquare },
