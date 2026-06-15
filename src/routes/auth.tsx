@@ -82,7 +82,7 @@ function AuthPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (tab === "signup" && !agreed) {
+    if (!agreed) {
       toast.error("You must accept the Terms & NDA to continue");
       return;
     }
@@ -265,25 +265,23 @@ function AuthPage() {
                   </>
                 )}
 
-                <TabsContent value="signup" className="mt-0 p-0">
-                  <div className="rounded-lg border border-border bg-muted/40 p-3">
-                    <div className="flex items-start gap-3">
-                      <Checkbox id="terms" checked={agreed} onCheckedChange={(c) => setAgreed(c === true)} className="mt-0.5" />
-                      <Label htmlFor="terms" className="cursor-pointer text-xs leading-relaxed text-muted-foreground">
-                        I have read and agree to the{" "}
-                        <button type="button" onClick={() => setShowTerms((v) => !v)} className="font-medium text-primary underline-offset-2 hover:underline">
-                          Terms, Privacy Policy & NDA
-                        </button>
-                        .
-                      </Label>
-                    </div>
-                    {showTerms && (
-                      <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-xs text-muted-foreground">
-                        {TERMS.map((t) => <li key={t}>{t}</li>)}
-                      </ol>
-                    )}
+                <div className="rounded-lg border border-border bg-muted/40 p-3">
+                  <div className="flex items-start gap-3">
+                    <Checkbox id="terms" checked={agreed} onCheckedChange={(c) => setAgreed(c === true)} className="mt-0.5" />
+                    <Label htmlFor="terms" className="cursor-pointer text-xs leading-relaxed text-muted-foreground">
+                      I have read and agree to the{" "}
+                      <button type="button" onClick={() => setShowTerms((v) => !v)} className="font-medium text-primary underline-offset-2 hover:underline">
+                        Terms, Privacy Policy & NDA
+                      </button>
+                      .
+                    </Label>
                   </div>
-                </TabsContent>
+                  {showTerms && (
+                    <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-xs text-muted-foreground">
+                      {TERMS.map((t) => <li key={t}>{t}</li>)}
+                    </ol>
+                  )}
+                </div>
 
                 <Button type="submit" className="w-full" size="lg" disabled={busy}>
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "phone" ? (otpSent ? "Verify OTP" : "Send OTP") : tab === "login" ? "Log in" : "Create account"}

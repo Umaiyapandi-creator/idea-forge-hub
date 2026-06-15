@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { Menu, LogOut, Loader2, Mail, Award, MessageSquare, User, Camera } from "lucide-react";
+import { useNavigate, Link } from "@tanstack/react-router";
+import { Menu, LogOut, Loader2, Mail, Award, MessageSquare, User, Camera, FolderKanban, Plus, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ import periyaCert from "@/assets/certs/periyanayagam.jpeg.asset.json";
 import esakkiCert from "@/assets/certs/esakkimuthu.jpeg.asset.json";
 import mareesCert from "@/assets/certs/mareeswaran.jpeg.asset.json";
 
-const APPLY_FORM_URL = "https://forms.gle/";
+const APPLY_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc91HEo9eq0iPOU3t9RtKxksarjovfJVdGGai1dMC2z92kvEA/viewform?usp=header";
 
 const DIRECTORS = [
   { name: "L. Karthikeyan", roll: "Board of Director", img: karthikeyanCert.url },
@@ -40,7 +40,16 @@ const CONTACTS = [
   { title: "Customer Service", email: "careofwaytodream@gmail.com" },
 ];
 
-type Section = "profile" | "directors" | "feedback" | "founders" | "contact";
+type Section = "profile" | "projects" | "directors" | "feedback" | "founders" | "contact";
+
+type ProjectRow = {
+  id: string;
+  name: string;
+  industry: string | null;
+  funding_needed: string | null;
+  status: string;
+  owner_id: string;
+};
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -55,7 +64,21 @@ export function Dashboard() {
   const [feedback, setFeedback] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [viewer, setViewer] = useState<{ src: string; name: string } | null>(null);
+  const [projects, setProjects] = useState<ProjectRow[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user || section !== "projects") return;
+    setProjectsLoading(true);
+    const q = user.role === "innovator"
+      ? supabase.from("projects").select("id,name,industry,funding_needed,status,owner_id").eq("owner_id", user.id).order("created_at", { ascending: false })
+      : supabase.from("projects").select("id,name,industry,funding_needed,status,owner_id").order("created_at", { ascending: false });
+    q.then(({ data }) => {
+      setProjects((data ?? []) as ProjectRow[]);
+      setProjectsLoading(false);
+    });
+  }, [user, section]);
 
   useEffect(() => {
     if (!user) return;
@@ -130,6 +153,7 @@ export function Dashboard() {
 
   const navItems: { id: Section; label: string; icon: typeof User }[] = [
     { id: "profile", label: "Profile", icon: User },
+    { id: "projects", label: "Projects", icon: FolderKanban },
     { id: "directors", label: "Directors", icon: Award },
     { id: "founders", label: "Founders", icon: Award },
     { id: "feedback", label: "Feedback", icon: MessageSquare },
@@ -255,6 +279,43 @@ export function Dashboard() {
                 />
               </div>
             </div>
+          </section>
+        )}
+
+        {section === "projects" && (
+          <section>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-bold">{user.role === "innovator" ? "My projects" : "Projects"}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {user.role === "innovator" ? "Manage your ideas, teams and investor requests" : "Browse public summaries. Request access for protected documents."}
+                </p>
+              </div>
+              {user.role === "innovator" && (
+                <Link to="/project/new"><Button className="gap-2"><Plus className="h-4 w-4" /> Upload new idea</Button></Link>
+              )}
+            </div>
+            {projectsLoading ? (
+              <div className="grid place-items-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+            ) : projects.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
+                {user.role === "innovator" ? "No projects yet. Click \"Upload new idea\" to get started." : "No projects published yet."}
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {projects.map((p) => (
+                  <Link key={p.id} to="/project/$id" params={{ id: p.id }} className="group rounded-xl border border-border bg-card p-5 shadow-sm transition hover:border-primary hover:shadow-md">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="font-semibold text-foreground group-hover:text-primary">{p.name}</div>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase text-primary">{p.status}</span>
+                    </div>
+                    {p.industry && <div className="mt-1 text-xs text-muted-foreground">{p.industry}</div>}
+                    {p.funding_needed && <div className="mt-3 text-sm">Funding goal: <span className="font-medium">{p.funding_needed}</span></div>}
+                    <div className="mt-4 inline-flex items-center gap-1 text-xs text-primary"><FileText className="h-3 w-3" /> Open workspace →</div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </section>
         )}
 
