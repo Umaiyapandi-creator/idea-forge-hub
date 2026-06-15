@@ -40,7 +40,16 @@ const CONTACTS = [
   { title: "Customer Service", email: "careofwaytodream@gmail.com" },
 ];
 
-type Section = "profile" | "directors" | "feedback" | "founders" | "contact";
+type Section = "profile" | "projects" | "directors" | "feedback" | "founders" | "contact";
+
+type ProjectRow = {
+  id: string;
+  name: string;
+  industry: string | null;
+  funding_needed: string | null;
+  status: string;
+  owner_id: string;
+};
 
 export function Dashboard() {
   const navigate = useNavigate();
