@@ -64,7 +64,21 @@ export function Dashboard() {
   const [feedback, setFeedback] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [viewer, setViewer] = useState<{ src: string; name: string } | null>(null);
+  const [projects, setProjects] = useState<ProjectRow[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!user || section !== "projects") return;
+    setProjectsLoading(true);
+    const q = user.role === "innovator"
+      ? supabase.from("projects").select("id,name,industry,funding_needed,status,owner_id").eq("owner_id", user.id).order("created_at", { ascending: false })
+      : supabase.from("projects").select("id,name,industry,funding_needed,status,owner_id").order("created_at", { ascending: false });
+    q.then(({ data }) => {
+      setProjects((data ?? []) as ProjectRow[]);
+      setProjectsLoading(false);
+    });
+  }, [user, section]);
 
   useEffect(() => {
     if (!user) return;
