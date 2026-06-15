@@ -282,6 +282,43 @@ export function Dashboard() {
           </section>
         )}
 
+        {section === "projects" && (
+          <section>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-bold">{user.role === "innovator" ? "My projects" : "Projects"}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {user.role === "innovator" ? "Manage your ideas, teams and investor requests" : "Browse public summaries. Request access for protected documents."}
+                </p>
+              </div>
+              {user.role === "innovator" && (
+                <Link to="/project/new"><Button className="gap-2"><Plus className="h-4 w-4" /> Upload new idea</Button></Link>
+              )}
+            </div>
+            {projectsLoading ? (
+              <div className="grid place-items-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+            ) : projects.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
+                {user.role === "innovator" ? "No projects yet. Click \"Upload new idea\" to get started." : "No projects published yet."}
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {projects.map((p) => (
+                  <Link key={p.id} to="/project/$id" params={{ id: p.id }} className="group rounded-xl border border-border bg-card p-5 shadow-sm transition hover:border-primary hover:shadow-md">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="font-semibold text-foreground group-hover:text-primary">{p.name}</div>
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase text-primary">{p.status}</span>
+                    </div>
+                    {p.industry && <div className="mt-1 text-xs text-muted-foreground">{p.industry}</div>}
+                    {p.funding_needed && <div className="mt-3 text-sm">Funding goal: <span className="font-medium">{p.funding_needed}</span></div>}
+                    <div className="mt-4 inline-flex items-center gap-1 text-xs text-primary"><FileText className="h-3 w-3" /> Open workspace →</div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         {section === "directors" && <CertGrid title="Directors" items={DIRECTORS} onOpen={setViewer} />}
         {section === "founders" && <CertGrid title="Founders" items={FOUNDERS} onOpen={setViewer} />}
 
