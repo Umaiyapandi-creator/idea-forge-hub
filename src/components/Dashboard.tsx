@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Menu, LogOut, Loader2, Mail, Award, MessageSquare, User, Phone, X } from "lucide-react";
+import { Menu, LogOut, Loader2, Mail, Award, MessageSquare, User, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -15,25 +15,30 @@ import suryaCert from "@/assets/certs/surya.jpeg.asset.json";
 import karthikeyanCert from "@/assets/certs/karthikeyan.jpeg.asset.json";
 import umaiyaCert from "@/assets/certs/umaiya.jpeg.asset.json";
 import mahaCert from "@/assets/certs/mahalakshmi.jpeg.asset.json";
+import periyaCert from "@/assets/certs/periyanayagam.jpeg.asset.json";
 import esakkiCert from "@/assets/certs/esakkimuthu.jpeg.asset.json";
 import mareesCert from "@/assets/certs/mareeswaran.jpeg.asset.json";
 
-// Replace with the Google Form URL when available
 const APPLY_FORM_URL = "https://forms.gle/";
 
 const DIRECTORS = [
-  { name: "S. Surya", roll: "WTD_BOD-065", img: suryaCert.url },
-  { name: "L. Karthikeyan", roll: "WTD_BOD-066", img: karthikeyanCert.url },
-  { name: "B. Umaiya Pandi", roll: "WTD_TD-001", img: umaiyaCert.url },
-  { name: "S. Maha Lakshmi", roll: "WTD_BOD-067", img: mahaCert.url },
+  { name: "L. Karthikeyan", roll: "Board of Director", img: karthikeyanCert.url },
+  { name: "S. Maha Lakshmi", roll: "Board of Director", img: mahaCert.url },
+  { name: "S. Surya", roll: "Board of Director", img: suryaCert.url },
+  { name: "P. Periyanayagam", roll: "Board of Director", img: periyaCert.url },
+  { name: "B. Umaiya Pandi", roll: "Technical Director", img: umaiyaCert.url },
 ];
 
 const FOUNDERS = [
-  { name: "K. EsakkiMuthu", roll: "WTD_FND-001", img: esakkiCert.url },
-  { name: "L. Mareeswaran", roll: "WTD_CFND-001", img: mareesCert.url },
+  { name: "K. EsakkiMuthu", roll: "Founder", img: esakkiCert.url },
+  { name: "L. Mareeswaran", roll: "Co-Founder", img: mareesCert.url },
 ];
 
-const CONTACT_EMAILS = ["esakkimuthu01447@gmail.com", "marees1422006@gmail.com"];
+const CONTACTS = [
+  { title: "Founder", email: "founder@waytodream.sbs" },
+  { title: "Co-Founder", email: "cofounderwaytodream@gmail.com" },
+  { title: "Customer Service", email: "careofwaytodream@gmail.com" },
+];
 
 type Section = "profile" | "directors" | "feedback" | "founders" | "contact";
 
@@ -44,13 +49,26 @@ export function Dashboard() {
   const [showAd, setShowAd] = useState(true);
   const [section, setSection] = useState<Section>("profile");
   const [industry, setIndustry] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarPath, setAvatarPath] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [viewer, setViewer] = useState<{ src: string; name: string } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("industry").eq("id", user.id).maybeSingle()
-      .then(({ data }) => setIndustry(data?.industry ?? ""));
+    supabase.from("profiles").select("industry, avatar_url").eq("id", user.id).maybeSingle()
+      .then(async ({ data }) => {
+        setIndustry(data?.industry ?? "");
+        const path = data?.avatar_url ?? null;
+        setAvatarPath(path);
+        if (path) {
+          const { data: signed } = await supabase.storage.from("avatars").createSignedUrl(path, 3600);
+          if (signed?.signedUrl) setAvatarUrl(signed.signedUrl);
+        }
+      });
   }, [user]);
 
   const logout = async () => {
@@ -63,6 +81,33 @@ export function Dashboard() {
     setIndustry(val);
     if (!user) return;
     await supabase.from("profiles").update({ industry: val }).eq("id", user.id);
+  };
+
+  const onPickAvatar = () => fileRef.current?.click();
+
+  const onAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please pick an image"); return; }
+    setUploadingAvatar(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+      if (error) throw error;
+      const { error: updErr } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
+      if (updErr) throw updErr;
+      if (avatarPath) await supabase.storage.from("avatars").remove([avatarPath]);
+      const { data: signed } = await supabase.storage.from("avatars").createSignedUrl(path, 3600);
+      setAvatarPath(path);
+      setAvatarUrl(signed?.signedUrl ?? null);
+      toast.success("Profile picture updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const submitFeedback = async () => {
@@ -86,16 +131,38 @@ export function Dashboard() {
   const navItems: { id: Section; label: string; icon: typeof User }[] = [
     { id: "profile", label: "Profile", icon: User },
     { id: "directors", label: "Directors", icon: Award },
-    { id: "feedback", label: "Feedback", icon: MessageSquare },
     { id: "founders", label: "Founders", icon: Award },
+    { id: "feedback", label: "Feedback", icon: MessageSquare },
     { id: "contact", label: "Contact", icon: Mail },
   ];
+
+  const AvatarCircle = ({ size = 64, clickable = false }: { size?: number; clickable?: boolean }) => (
+    <button
+      type="button"
+      onClick={clickable ? onPickAvatar : undefined}
+      disabled={!clickable || uploadingAvatar}
+      className={`relative grid place-items-center overflow-hidden rounded-full bg-primary/10 text-primary font-bold ${clickable ? "cursor-pointer ring-2 ring-transparent hover:ring-primary/40" : ""}`}
+      style={{ width: size, height: size, fontSize: size * 0.4 }}
+      aria-label={clickable ? "Change profile picture" : undefined}
+    >
+      {avatarUrl ? (
+        <img src={avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+      ) : (
+        <span>{user.name.charAt(0).toUpperCase()}</span>
+      )}
+      {clickable && (
+        <span className="absolute inset-x-0 bottom-0 flex h-1/3 items-center justify-center bg-black/50 text-white">
+          {uploadingAvatar ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
+        </span>
+      )}
+    </button>
+  );
 
   const SidebarBody = (
     <div className="flex h-full flex-col gap-4 p-4">
       <div className="rounded-xl border border-border bg-card p-4 text-center">
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary/10 text-primary text-xl font-bold">
-          {user.name.charAt(0).toUpperCase()}
+        <div className="mx-auto h-16 w-16">
+          <AvatarCircle size={64} />
         </div>
         <div className="mt-2 font-semibold">{user.name}</div>
         <div className="text-xs text-muted-foreground">{industry || "Industry not set"}</div>
@@ -125,7 +192,8 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* Top nav */}
+      <input ref={fileRef} type="file" accept="image/*" hidden onChange={onAvatarChange} />
+
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
         <div className="container mx-auto flex h-20 items-center justify-between gap-3 px-4">
           <div className="flex items-center gap-3">
@@ -142,13 +210,15 @@ export function Dashboard() {
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={logout} className="hidden gap-2 sm:flex">
-            <LogOut className="h-4 w-4" /> Log out
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:block"><AvatarCircle size={36} /></div>
+            <Button variant="ghost" size="sm" onClick={logout} className="hidden gap-2 sm:flex">
+              <LogOut className="h-4 w-4" /> Log out
+            </Button>
+          </div>
         </div>
       </header>
 
-      {/* Sidebar */}
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent side="left" className="w-72 p-0">
           <SheetHeader className="border-b border-border p-4">
@@ -160,22 +230,21 @@ export function Dashboard() {
         </SheetContent>
       </Sheet>
 
-      {/* Main */}
       <main className="container mx-auto px-4 py-8">
         {section === "profile" && (
           <section>
             <h2 className="mb-6 text-2xl font-bold">Profile</h2>
             <div className="max-w-md rounded-xl border border-border bg-card p-6 shadow-sm">
               <div className="flex items-center gap-4">
-                <div className="grid h-20 w-20 place-items-center rounded-full bg-primary/10 text-primary text-2xl font-bold">
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                <AvatarCircle size={80} clickable />
                 <div>
                   <div className="text-lg font-semibold">{user.name}</div>
                   <div className="text-sm text-muted-foreground">{user.email}</div>
                   <div className="mt-1 text-xs capitalize text-primary">{user.role}</div>
+                  {industry && <div className="mt-1 text-xs text-muted-foreground">Industry: <span className="font-medium text-foreground">{industry}</span></div>}
                 </div>
               </div>
+              <p className="mt-3 text-xs text-muted-foreground">Tap the photo to change your profile picture.</p>
               <div className="mt-6">
                 <label className="mb-1 block text-sm font-medium">Industry</label>
                 <Input
@@ -189,25 +258,15 @@ export function Dashboard() {
           </section>
         )}
 
-        {section === "directors" && (
-          <CertGrid title="Directors" items={DIRECTORS} />
-        )}
-
-        {section === "founders" && (
-          <CertGrid title="Founders" items={FOUNDERS} />
-        )}
+        {section === "directors" && <CertGrid title="Directors" items={DIRECTORS} onOpen={setViewer} />}
+        {section === "founders" && <CertGrid title="Founders" items={FOUNDERS} onOpen={setViewer} />}
 
         {section === "feedback" && (
           <section className="max-w-2xl">
             <h2 className="mb-6 text-2xl font-bold">Feedback</h2>
             <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
               <label className="mb-2 block text-sm font-medium">Share your thoughts</label>
-              <Textarea
-                rows={6}
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Tell us what's working and what we can improve..."
-              />
+              <Textarea rows={6} value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Tell us what's working and what we can improve..." />
               <Button className="mt-4" onClick={submitFeedback} disabled={submitting || !feedback.trim()}>
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit feedback"}
               </Button>
@@ -219,18 +278,18 @@ export function Dashboard() {
           <section className="max-w-xl">
             <h2 className="mb-6 text-2xl font-bold">Contact Details</h2>
             <div className="space-y-3">
-              {CONTACT_EMAILS.map((e) => (
+              {CONTACTS.map((c) => (
                 <a
-                  key={e}
-                  href={`mailto:${e}`}
+                  key={c.email}
+                  href={`mailto:${c.email}`}
                   className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition hover:border-primary"
                 >
                   <div className="grid h-10 w-10 place-items-center rounded-full bg-primary/10 text-primary">
                     <Mail className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground">Email</div>
-                    <div className="font-medium">{e}</div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-primary">{c.title}</div>
+                    <div className="font-medium text-foreground">{c.email}</div>
                   </div>
                 </a>
               ))}
@@ -239,7 +298,6 @@ export function Dashboard() {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-border bg-background py-6">
         <div className="container mx-auto flex flex-col items-center justify-between gap-3 px-4 text-sm text-muted-foreground md:flex-row">
           <Logo size={28} />
@@ -247,7 +305,6 @@ export function Dashboard() {
         </div>
       </footer>
 
-      {/* Apply popup */}
       <Dialog open={showAd} onOpenChange={setShowAd}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -266,25 +323,53 @@ export function Dashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Certificate viewer */}
+      <Dialog open={!!viewer} onOpenChange={(o) => !o && setViewer(null)}>
+        <DialogContent className="max-w-5xl p-2 sm:p-4">
+          <DialogHeader>
+            <DialogTitle className="text-base sm:text-lg">{viewer?.name}</DialogTitle>
+          </DialogHeader>
+          {viewer && (
+            <div className="overflow-auto">
+              <img src={viewer.src} alt={viewer.name} className="mx-auto h-auto max-h-[80vh] w-full object-contain" />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function CertGrid({ title, items }: { title: string; items: { name: string; roll: string; img: string }[] }) {
+function CertGrid({
+  title,
+  items,
+  onOpen,
+}: {
+  title: string;
+  items: { name: string; roll: string; img: string }[];
+  onOpen: (v: { src: string; name: string }) => void;
+}) {
   return (
     <section>
       <h2 className="mb-6 text-2xl font-bold">{title}</h2>
       <div className="grid gap-6 sm:grid-cols-2">
         {items.map((c) => (
-          <div key={c.name} className="overflow-hidden rounded-xl border border-border bg-card shadow-sm transition hover:shadow-lg">
+          <button
+            key={c.name}
+            type="button"
+            onClick={() => onOpen({ src: c.img, name: c.name })}
+            className="group overflow-hidden rounded-xl border border-border bg-card text-left shadow-sm transition hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          >
             <div className="aspect-[16/10] overflow-hidden bg-muted">
-              <img src={c.img} alt={`${c.name} certificate`} className="h-full w-full object-cover" />
+              <img src={c.img} alt={`${c.name} certificate`} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
             </div>
             <div className="p-4 text-center">
               <div className="text-base font-bold text-foreground">{c.name}</div>
               <div className="mt-1 text-sm font-semibold text-primary">{c.roll}</div>
+              <div className="mt-1 text-[11px] text-muted-foreground">Click to view certificate</div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </section>
