@@ -58,6 +58,7 @@ function AuthPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   // Auto-redirect if already logged in
   useEffect(() => {
