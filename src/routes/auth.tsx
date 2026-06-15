@@ -82,7 +82,7 @@ function AuthPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (tab === "signup" && !agreed) {
+    if (!agreed) {
       toast.error("You must accept the Terms & NDA to continue");
       return;
     }
