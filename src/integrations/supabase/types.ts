@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          project_id: string
+          requester_role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          project_id: string
+          requester_role: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          project_id?: string
+          requester_role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_requests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           created_at: string
@@ -65,6 +106,89 @@ export type Database = {
         }
         Relationships: []
       }
+      project_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string
+          funding_needed: string | null
+          id: string
+          image_path: string | null
+          industry: string | null
+          name: string
+          owner_id: string
+          pdf_path: string | null
+          ppt_path: string | null
+          problem: string
+          public_summary: string | null
+          solution: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          funding_needed?: string | null
+          id?: string
+          image_path?: string | null
+          industry?: string | null
+          name: string
+          owner_id: string
+          pdf_path?: string | null
+          ppt_path?: string | null
+          problem: string
+          public_summary?: string | null
+          solution?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          funding_needed?: string | null
+          id?: string
+          image_path?: string | null
+          industry?: string | null
+          name?: string
+          owner_id?: string
+          pdf_path?: string | null
+          ppt_path?: string | null
+          problem?: string
+          public_summary?: string | null
+          solution?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -93,6 +217,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_project_member: {
+        Args: { _project_id: string; _user_id: string }
         Returns: boolean
       }
     }
