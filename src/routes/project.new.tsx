@@ -49,7 +49,7 @@ function Page() {
         if (upErr) throw upErr;
         return path;
       };
-      const patch: Record<string, string> = {};
+      const patch: { image_path?: string; ppt_path?: string; pdf_path?: string } = {};
       if (image) patch.image_path = await upload("project-images", image, "cover");
       if (ppt) patch.ppt_path = await upload("project-docs", ppt, "ppt");
       if (pdf) patch.pdf_path = await upload("project-docs", pdf, "pdf");
