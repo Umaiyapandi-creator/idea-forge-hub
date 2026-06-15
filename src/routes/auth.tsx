@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { Lightbulb, Code2, Briefcase, ShieldCheck, Loader2 } from "lucide-react";
+import { Lightbulb, Code2, Briefcase, ShieldCheck, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,6 +58,7 @@ function AuthPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   // Auto-redirect if already logged in
   useEffect(() => {
@@ -236,7 +237,13 @@ function AuthPage() {
                           <Link to="/forgot-password" className="text-xs text-primary hover:underline">Forgot?</Link>
                         )}
                       </div>
-                      <Input id="password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" />
+                      <div className="relative">
+                        <Input id="password" type={showPw ? "text" : "password"} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="••••••••" className="pr-10" />
+                        <button type="button" onClick={() => setShowPw((v) => !v)} aria-label={showPw ? "Hide password" : "Show password"}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground">
+                          {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
                   </>
                 ) : (
