@@ -19,7 +19,7 @@ import periyaCert from "@/assets/certs/periyanayagam.jpeg.asset.json";
 import esakkiCert from "@/assets/certs/esakkimuthu.jpeg.asset.json";
 import mareesCert from "@/assets/certs/mareeswaran.jpeg.asset.json";
 
-const APPLY_FORM_URL = "https://forms.gle/";
+const APPLY_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc91HEo9eq0iPOU3t9RtKxksarjovfJVdGGai1dMC2z92kvEA/viewform?usp=header";
 
 const DIRECTORS = [
   { name: "L. Karthikeyan", roll: "Board of Director", img: karthikeyanCert.url },
