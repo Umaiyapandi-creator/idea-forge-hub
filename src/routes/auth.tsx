@@ -135,7 +135,7 @@ function AuthPage() {
             password: form.password,
             options: {
               emailRedirectTo: `${window.location.origin}/auth`,
-              data: { full_name: form.name, role },
+              data: { full_name: form.name, role: backendRole },
             },
           });
           if (error) throw error;
