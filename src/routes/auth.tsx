@@ -109,7 +109,7 @@ function AuthPage() {
         if (!otpSent) {
           const { error } = await supabase.auth.signInWithOtp({
             phone: form.phone,
-            options: { data: { full_name: form.name || form.phone, role } },
+            options: { data: { full_name: form.name || form.phone, role: backendRole } },
           });
           if (error) throw error;
           setOtpSent(true);
