@@ -44,10 +44,11 @@ const TERMS = [
   "By using the platform, users agree to all Terms, Privacy Policy, and NDA rules.",
 ];
 
-const ROLES: { value: Role; label: string; icon: typeof Lightbulb; desc: string }[] = [
+const ROLES: { value: UiRole; label: string; icon: typeof Lightbulb; desc: string }[] = [
   { value: "innovator", label: "Innovator", icon: Lightbulb, desc: "Upload & protect your ideas" },
   { value: "developer", label: "Developer", icon: Code2, desc: "Build prototypes with founders" },
   { value: "investor", label: "Investor", icon: Briefcase, desc: "Discover & back startups" },
+  { value: "founder", label: "Founder", icon: Crown, desc: "Platform administration (restricted)" },
 ];
 
 function AuthPage() {
