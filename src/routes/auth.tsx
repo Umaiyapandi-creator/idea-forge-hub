@@ -90,6 +90,18 @@ function AuthPage() {
       toast.error("You must accept the Terms & NDA to continue");
       return;
     }
+    // Founder allowlist enforcement — block before any auth call.
+    if (role === "founder") {
+      if (mode === "phone") {
+        toast.error("Founder access requires email login.");
+        return;
+      }
+      if (!isFounderEmail(form.email)) {
+        toast.error("Access Denied. You are not authorized as a Founder.");
+        return;
+      }
+    }
+    const backendRole: Role = role === "founder" ? "admin" : role;
     setBusy(true);
     try {
       if (mode === "phone") {
