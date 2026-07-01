@@ -1,12 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { Lightbulb, Code2, Briefcase, ShieldCheck, Loader2, Eye, EyeOff } from "lucide-react";
+import { Lightbulb, Code2, Briefcase, ShieldCheck, Loader2, Eye, EyeOff, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import { isFounderEmail } from "@/lib/founders";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { dashboardPathFor, type Role } from "@/lib/auth-store";
