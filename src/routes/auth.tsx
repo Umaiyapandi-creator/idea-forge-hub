@@ -15,8 +15,10 @@ import { Logo } from "@/components/Logo";
 
 const searchSchema = z.object({
   tab: z.enum(["login", "signup"]).optional(),
-  role: z.enum(["innovator", "developer", "investor"]).optional(),
+  role: z.enum(["innovator", "developer", "investor", "founder"]).optional(),
 });
+
+type UiRole = Role | "founder";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
