@@ -1,13 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { Lightbulb, Code2, Briefcase, ShieldCheck, Loader2, Eye, EyeOff, Crown } from "lucide-react";
+import { Lightbulb, Code2, Briefcase, ShieldCheck, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { isFounderEmail } from "@/lib/founders";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { dashboardPathFor, type Role } from "@/lib/auth-store";
@@ -15,10 +14,8 @@ import { Logo } from "@/components/Logo";
 
 const searchSchema = z.object({
   tab: z.enum(["login", "signup"]).optional(),
-  role: z.enum(["innovator", "developer", "investor", "founder"]).optional(),
+  role: z.enum(["innovator", "developer", "investor"]).optional(),
 });
-
-type UiRole = Role | "founder";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -44,18 +41,17 @@ const TERMS = [
   "By using the platform, users agree to all Terms, Privacy Policy, and NDA rules.",
 ];
 
-const ROLES: { value: UiRole; label: string; icon: typeof Lightbulb; desc: string }[] = [
+const ROLES: { value: Role; label: string; icon: typeof Lightbulb; desc: string }[] = [
   { value: "innovator", label: "Innovator", icon: Lightbulb, desc: "Upload & protect your ideas" },
   { value: "developer", label: "Developer", icon: Code2, desc: "Build prototypes with founders" },
   { value: "investor", label: "Investor", icon: Briefcase, desc: "Discover & back startups" },
-  { value: "founder", label: "Founder", icon: Crown, desc: "Platform administration (restricted)" },
 ];
 
 function AuthPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const [tab, setTab] = useState<"login" | "signup">(search.tab ?? "login");
-  const [role, setRole] = useState<UiRole>(search.role ?? "innovator");
+  const [role, setRole] = useState<Role>(search.role ?? "innovator");
   const [agreed, setAgreed] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "", otp: "" });
   const [mode, setMode] = useState<"email" | "phone">("email");
@@ -90,18 +86,6 @@ function AuthPage() {
       toast.error("You must accept the Terms & NDA to continue");
       return;
     }
-    // Founder allowlist enforcement — block before any auth call.
-    if (role === "founder") {
-      if (mode === "phone") {
-        toast.error("Founder access requires email login.");
-        return;
-      }
-      if (!isFounderEmail(form.email)) {
-        toast.error("Access Denied. You are not authorized as a Founder.");
-        return;
-      }
-    }
-    const backendRole: Role = role === "founder" ? "admin" : role;
     setBusy(true);
     try {
       if (mode === "phone") {
@@ -109,7 +93,7 @@ function AuthPage() {
         if (!otpSent) {
           const { error } = await supabase.auth.signInWithOtp({
             phone: form.phone,
-            options: { data: { full_name: form.name || form.phone, role: backendRole } },
+            options: { data: { full_name: form.name || form.phone, role } },
           });
           if (error) throw error;
           setOtpSent(true);
@@ -135,23 +119,17 @@ function AuthPage() {
             password: form.password,
             options: {
               emailRedirectTo: `${window.location.origin}/auth`,
-              data: { full_name: form.name, role: backendRole },
+              data: { full_name: form.name, role },
             },
           });
           if (error) throw error;
           toast.success("Account created — welcome!");
         } else {
-          const { data: signInData, error } = await supabase.auth.signInWithPassword({
+          const { error } = await supabase.auth.signInWithPassword({
             email: form.email,
             password: form.password,
           });
           if (error) throw error;
-          // If logging in as Founder, ensure the account carries the admin role.
-          if (role === "founder" && signInData.user) {
-            await supabase
-              .from("user_roles")
-              .upsert({ user_id: signInData.user.id, role: "admin" }, { onConflict: "user_id,role" });
-          }
           toast.success("Welcome back");
         }
       }
@@ -204,7 +182,7 @@ function AuthPage() {
               <form onSubmit={submit} className="mt-6 space-y-4">
                 <div>
                   <Label className="mb-2 block">I am a</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {ROLES.map((r) => {
                       const Icon = r.icon;
                       const active = role === r.value;
