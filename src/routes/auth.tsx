@@ -204,7 +204,7 @@ function AuthPage() {
               <form onSubmit={submit} className="mt-6 space-y-4">
                 <div>
                   <Label className="mb-2 block">I am a</Label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {ROLES.map((r) => {
                       const Icon = r.icon;
                       const active = role === r.value;
