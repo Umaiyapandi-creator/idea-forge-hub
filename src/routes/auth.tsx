@@ -141,11 +141,17 @@ function AuthPage() {
           if (error) throw error;
           toast.success("Account created — welcome!");
         } else {
-          const { error } = await supabase.auth.signInWithPassword({
+          const { data: signInData, error } = await supabase.auth.signInWithPassword({
             email: form.email,
             password: form.password,
           });
           if (error) throw error;
+          // If logging in as Founder, ensure the account carries the admin role.
+          if (role === "founder" && signInData.user) {
+            await supabase
+              .from("user_roles")
+              .upsert({ user_id: signInData.user.id, role: "admin" }, { onConflict: "user_id,role" });
+          }
           toast.success("Welcome back");
         }
       }
