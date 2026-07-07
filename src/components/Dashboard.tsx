@@ -347,6 +347,7 @@ export function Dashboard() {
                   </Link>
                 ))}
               </div>
+              </>
             )}
           </section>
         )}
