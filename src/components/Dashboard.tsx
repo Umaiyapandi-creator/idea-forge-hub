@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
-import { Menu, LogOut, Loader2, Mail, Award, MessageSquare, User, Camera, FolderKanban, Plus, FileText } from "lucide-react";
+import { Menu, LogOut, Loader2, Mail, Award, MessageSquare, User, Camera, FolderKanban, Plus, FileText, Crown, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { signOut, useAuth } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
+import { usePlan } from "@/lib/premium";
+import { PremiumBadge, FeaturedBadge, PriorityBadge } from "@/components/PremiumBadge";
 
 import suryaCert from "@/assets/certs/surya.jpeg.asset.json";
 import karthikeyanCert from "@/assets/certs/karthikeyan.jpeg.asset.json";
@@ -49,11 +51,14 @@ type ProjectRow = {
   funding_needed: string | null;
   status: string;
   owner_id: string;
+  is_priority: boolean;
+  is_featured: boolean;
 };
 
 export function Dashboard() {
   const navigate = useNavigate();
   const { user, loading } = useAuth({ redirectIfUnauthed: true });
+  const { isPremium } = usePlan(user?.id);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAd, setShowAd] = useState(true);
   const [section, setSection] = useState<Section>("profile");
@@ -71,9 +76,10 @@ export function Dashboard() {
   useEffect(() => {
     if (!user || section !== "projects") return;
     setProjectsLoading(true);
+    const cols = "id,name,industry,funding_needed,status,owner_id,is_priority,is_featured";
     const q = user.role === "innovator"
-      ? supabase.from("projects").select("id,name,industry,funding_needed,status,owner_id").eq("owner_id", user.id).order("created_at", { ascending: false })
-      : supabase.from("projects").select("id,name,industry,funding_needed,status,owner_id").order("created_at", { ascending: false });
+      ? supabase.from("projects").select(cols).eq("owner_id", user.id).order("is_priority", { ascending: false }).order("created_at", { ascending: false })
+      : supabase.from("projects").select(cols).order("is_priority", { ascending: false }).order("is_featured", { ascending: false }).order("created_at", { ascending: false });
     q.then(({ data }) => {
       setProjects((data ?? []) as ProjectRow[]);
       setProjectsLoading(false);
@@ -235,6 +241,12 @@ export function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {isPremium && <PremiumBadge className="hidden sm:inline-flex" />}
+            <Link to="/premium" className="hidden sm:inline-flex">
+              <Button variant={isPremium ? "outline" : "default"} size="sm" className="gap-1">
+                <Crown className="h-4 w-4" /> {isPremium ? "Premium" : "Upgrade"}
+              </Button>
+            </Link>
             <div className="hidden sm:block"><AvatarCircle size={36} /></div>
             <Button variant="ghost" size="sm" onClick={logout} className="hidden gap-2 sm:flex">
               <LogOut className="h-4 w-4" /> Log out
@@ -262,12 +274,21 @@ export function Dashboard() {
               <div className="flex items-center gap-4">
                 <AvatarCircle size={80} clickable />
                 <div>
-                  <div className="text-lg font-semibold">{user.name}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-lg font-semibold">{user.name}</div>
+                    {isPremium && <PremiumBadge />}
+                  </div>
                   <div className="text-sm text-muted-foreground">{user.email}</div>
                   <div className="mt-1 text-xs capitalize text-primary">{user.role}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">Plan: <span className="font-medium text-foreground">{isPremium ? "Premium" : "Free"}</span></div>
                   {industry && <div className="mt-1 text-xs text-muted-foreground">Industry: <span className="font-medium text-foreground">{industry}</span></div>}
                 </div>
               </div>
+              {!isPremium && (
+                <Link to="/premium" className="mt-4 block">
+                  <Button className="w-full gap-2"><Crown className="h-4 w-4" /> Upgrade to Premium</Button>
+                </Link>
+              )}
               <p className="mt-3 text-xs text-muted-foreground">Tap the photo to change your profile picture.</p>
               <div className="mt-6">
                 <label className="mb-1 block text-sm font-medium">Industry</label>
@@ -302,19 +323,31 @@ export function Dashboard() {
                 {user.role === "innovator" ? "No projects yet. Click \"Upload new idea\" to get started." : "No projects published yet."}
               </div>
             ) : (
+              <>
+                {(user.role === "admin" || user.role === "founder") && projects.some((p) => p.is_priority) && (
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-red-500">
+                    <Star className="h-4 w-4" /> Priority Review Projects
+                  </h3>
+                )}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
                 {projects.map((p) => (
-                  <Link key={p.id} to="/project/$id" params={{ id: p.id }} className="group rounded-xl border border-border bg-card p-5 shadow-sm transition hover:border-primary hover:shadow-md">
+                  <Link key={p.id} to="/project/$id" params={{ id: p.id }} className={`group rounded-xl border bg-card p-5 shadow-sm transition hover:shadow-md ${p.is_featured ? "border-primary" : "border-border hover:border-primary"}`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="font-semibold text-foreground group-hover:text-primary">{p.name}</div>
                       <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase text-primary">{p.status}</span>
                     </div>
-                    {p.industry && <div className="mt-1 text-xs text-muted-foreground">{p.industry}</div>}
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {p.is_priority && <PriorityBadge />}
+                      {p.is_featured && <FeaturedBadge />}
+                    </div>
+                    {p.industry && <div className="mt-2 text-xs text-muted-foreground">{p.industry}</div>}
                     {p.funding_needed && <div className="mt-3 text-sm">Funding goal: <span className="font-medium">{p.funding_needed}</span></div>}
                     <div className="mt-4 inline-flex items-center gap-1 text-xs text-primary"><FileText className="h-3 w-3" /> Open workspace →</div>
                   </Link>
                 ))}
               </div>
+              </>
             )}
           </section>
         )}

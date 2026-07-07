@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as InvestorRouteImport } from './routes/investor'
 import { Route as InnovatorRouteImport } from './routes/innovator'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -23,6 +24,11 @@ import { Route as ProjectIdRouteImport } from './routes/project.$id'
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PremiumRoute = PremiumRouteImport.update({
+  id: '/premium',
+  path: '/premium',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InvestorRoute = InvestorRouteImport.update({
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/innovator': typeof InnovatorRoute
   '/investor': typeof InvestorRoute
+  '/premium': typeof PremiumRoute
   '/reset-password': typeof ResetPasswordRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/innovator': typeof InnovatorRoute
   '/investor': typeof InvestorRoute
+  '/premium': typeof PremiumRoute
   '/reset-password': typeof ResetPasswordRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/innovator': typeof InnovatorRoute
   '/investor': typeof InvestorRoute
+  '/premium': typeof PremiumRoute
   '/reset-password': typeof ResetPasswordRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
@@ -118,6 +127,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/innovator'
     | '/investor'
+    | '/premium'
     | '/reset-password'
     | '/project/$id'
     | '/project/new'
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/innovator'
     | '/investor'
+    | '/premium'
     | '/reset-password'
     | '/project/$id'
     | '/project/new'
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/innovator'
     | '/investor'
+    | '/premium'
     | '/reset-password'
     | '/project/$id'
     | '/project/new'
@@ -155,6 +167,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   InnovatorRoute: typeof InnovatorRoute
   InvestorRoute: typeof InvestorRoute
+  PremiumRoute: typeof PremiumRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ProjectIdRoute: typeof ProjectIdRoute
   ProjectNewRoute: typeof ProjectNewRoute
@@ -167,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/premium': {
+      id: '/premium'
+      path: '/premium'
+      fullPath: '/premium'
+      preLoaderRoute: typeof PremiumRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/investor': {
@@ -243,6 +263,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   InnovatorRoute: InnovatorRoute,
   InvestorRoute: InvestorRoute,
+  PremiumRoute: PremiumRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ProjectIdRoute: ProjectIdRoute,
   ProjectNewRoute: ProjectNewRoute,

@@ -3,7 +3,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Role = "innovator" | "developer" | "investor" | "admin";
+export type Role = "innovator" | "developer" | "investor" | "admin" | "founder";
+
+export const FOUNDER_EMAILS = [
+  "esakkimuthu01447@gmail.com",
+  "founderofwaytodream@gmail.com",
+];
 
 export interface SessionUser {
   id: string;
@@ -17,7 +22,9 @@ export function dashboardPathFor(role: Role): string {
     case "innovator": return "/innovator";
     case "developer": return "/developer";
     case "investor": return "/investor";
-    case "admin": return "/admin";
+    case "admin":
+    case "founder":
+      return "/admin";
   }
 }
 
@@ -26,7 +33,12 @@ async function loadUser(userId: string, email: string | undefined): Promise<Sess
     supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
     supabase.from("user_roles").select("role").eq("user_id", userId),
   ]);
-  const role = (roles?.[0]?.role as Role) ?? "innovator";
+  // Prefer highest-privilege role if user has multiple
+  const rolesList = (roles ?? []).map((r) => r.role as Role);
+  const role: Role =
+    rolesList.includes("founder") ? "founder" :
+    rolesList.includes("admin") ? "admin" :
+    (rolesList[0] ?? "innovator");
   return {
     id: userId,
     email: profile?.email ?? email ?? "",
@@ -51,13 +63,12 @@ export function useAuth(options?: { redirectIfUnauthed?: boolean; requireRole?: 
         setLoading(false);
         if (options?.redirectIfUnauthed) navigate({ to: "/auth" });
       } else {
-        // Defer DB call to avoid deadlock in callback
         setTimeout(async () => {
           const u = await loadUser(session.user.id, session.user.email);
           if (!mounted) return;
           setUser(u);
           setLoading(false);
-          if (options?.requireRole && u && u.role !== options.requireRole && u.role !== "admin") {
+          if (options?.requireRole && u && u.role !== options.requireRole && u.role !== "admin" && u.role !== "founder") {
             navigate({ to: dashboardPathFor(u.role) });
           }
         }, 0);
@@ -75,7 +86,7 @@ export function useAuth(options?: { redirectIfUnauthed?: boolean; requireRole?: 
       if (!mounted) return;
       setUser(u);
       setLoading(false);
-      if (options?.requireRole && u && u.role !== options.requireRole && u.role !== "admin") {
+      if (options?.requireRole && u && u.role !== options.requireRole && u.role !== "admin" && u.role !== "founder") {
         navigate({ to: dashboardPathFor(u.role) });
       }
     });
