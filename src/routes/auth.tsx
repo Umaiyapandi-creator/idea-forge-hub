@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { Lightbulb, Code2, Briefcase, ShieldCheck, Loader2, Eye, EyeOff } from "lucide-react";
+import { Lightbulb, Code2, Briefcase, ShieldCheck, Loader2, Eye, EyeOff, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,12 +9,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { dashboardPathFor, type Role } from "@/lib/auth-store";
+import { dashboardPathFor, FOUNDER_EMAILS, type Role } from "@/lib/auth-store";
 import { Logo } from "@/components/Logo";
 
 const searchSchema = z.object({
   tab: z.enum(["login", "signup"]).optional(),
-  role: z.enum(["innovator", "developer", "investor"]).optional(),
+  role: z.enum(["innovator", "developer", "investor", "founder"]).optional(),
 });
 
 export const Route = createFileRoute("/auth")({
@@ -45,6 +45,7 @@ const ROLES: { value: Role; label: string; icon: typeof Lightbulb; desc: string 
   { value: "innovator", label: "Innovator", icon: Lightbulb, desc: "Upload & protect your ideas" },
   { value: "developer", label: "Developer", icon: Code2, desc: "Build prototypes with founders" },
   { value: "investor", label: "Investor", icon: Briefcase, desc: "Discover & back startups" },
+  { value: "founder", label: "Founder", icon: Crown, desc: "Platform administrators (restricted access)" },
 ];
 
 function AuthPage() {
@@ -88,6 +89,19 @@ function AuthPage() {
     }
     setBusy(true);
     try {
+      // Founder role gate — email must be in allow-list
+      if (role === "founder") {
+        if (mode === "phone") {
+          toast.error("Founder access requires email login only");
+          return;
+        }
+        const emailLc = form.email.trim().toLowerCase();
+        if (!FOUNDER_EMAILS.includes(emailLc)) {
+          toast.error("Access Denied. You are not authorized as a Founder.");
+          return;
+        }
+      }
+
       if (mode === "phone") {
         if (!form.phone) { toast.error("Enter your phone number"); return; }
         if (!otpSent) {
@@ -119,7 +133,7 @@ function AuthPage() {
             password: form.password,
             options: {
               emailRedirectTo: `${window.location.origin}/auth`,
-              data: { full_name: form.name, role },
+              data: { full_name: form.name, role: role === "founder" ? "innovator" : role },
             },
           });
           if (error) throw error;
@@ -130,6 +144,16 @@ function AuthPage() {
             password: form.password,
           });
           if (error) throw error;
+          // After login, if Founder was selected, verify the account actually has that role
+          if (role === "founder") {
+            const { data: { user: authUser } } = await supabase.auth.getUser();
+            const emailLc = (authUser?.email ?? "").toLowerCase();
+            if (!authUser || !FOUNDER_EMAILS.includes(emailLc)) {
+              await supabase.auth.signOut();
+              toast.error("Unauthorized Access — Founder credentials only.");
+              return;
+            }
+          }
           toast.success("Welcome back");
         }
       }
@@ -182,7 +206,7 @@ function AuthPage() {
               <form onSubmit={submit} className="mt-6 space-y-4">
                 <div>
                   <Label className="mb-2 block">I am a</Label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {ROLES.map((r) => {
                       const Icon = r.icon;
                       const active = role === r.value;

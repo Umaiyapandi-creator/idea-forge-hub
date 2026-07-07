@@ -84,6 +84,8 @@ export type Database = {
           full_name: string | null
           id: string
           industry: string | null
+          plan: string
+          plan_expires_at: string | null
           updated_at: string
         }
         Insert: {
@@ -93,6 +95,8 @@ export type Database = {
           full_name?: string | null
           id: string
           industry?: string | null
+          plan?: string
+          plan_expires_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -102,6 +106,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           industry?: string | null
+          plan?: string
+          plan_expires_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -140,11 +146,14 @@ export type Database = {
       }
       projects: {
         Row: {
+          ai_analysis: Json | null
           created_at: string
           funding_needed: string | null
           id: string
           image_path: string | null
           industry: string | null
+          is_featured: boolean
+          is_priority: boolean
           name: string
           owner_id: string
           pdf_path: string | null
@@ -156,11 +165,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_analysis?: Json | null
           created_at?: string
           funding_needed?: string | null
           id?: string
           image_path?: string | null
           industry?: string | null
+          is_featured?: boolean
+          is_priority?: boolean
           name: string
           owner_id: string
           pdf_path?: string | null
@@ -172,11 +184,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_analysis?: Json | null
           created_at?: string
           funding_needed?: string | null
           id?: string
           image_path?: string | null
           industry?: string | null
+          is_featured?: boolean
+          is_priority?: boolean
           name?: string
           owner_id?: string
           pdf_path?: string | null
@@ -225,7 +240,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "innovator" | "developer" | "investor"
+      app_role: "admin" | "innovator" | "developer" | "investor" | "founder"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -353,7 +368,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "innovator", "developer", "investor"],
+      app_role: ["admin", "innovator", "developer", "investor", "founder"],
     },
   },
 } as const
