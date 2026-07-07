@@ -323,7 +323,14 @@ export function Dashboard() {
                 {user.role === "innovator" ? "No projects yet. Click \"Upload new idea\" to get started." : "No projects published yet."}
               </div>
             ) : (
+              <>
+                {(user.role === "admin" || user.role === "founder") && projects.some((p) => p.is_priority) && (
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-red-500">
+                    <Star className="h-4 w-4" /> Priority Review Projects
+                  </h3>
+                )}
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
                 {projects.map((p) => (
                   <Link key={p.id} to="/project/$id" params={{ id: p.id }} className={`group rounded-xl border bg-card p-5 shadow-sm transition hover:shadow-md ${p.is_featured ? "border-primary" : "border-border hover:border-primary"}`}>
                     <div className="flex items-start justify-between gap-3">
