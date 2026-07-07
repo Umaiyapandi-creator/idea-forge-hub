@@ -325,12 +325,16 @@ export function Dashboard() {
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {projects.map((p) => (
-                  <Link key={p.id} to="/project/$id" params={{ id: p.id }} className="group rounded-xl border border-border bg-card p-5 shadow-sm transition hover:border-primary hover:shadow-md">
+                  <Link key={p.id} to="/project/$id" params={{ id: p.id }} className={`group rounded-xl border bg-card p-5 shadow-sm transition hover:shadow-md ${p.is_featured ? "border-primary" : "border-border hover:border-primary"}`}>
                     <div className="flex items-start justify-between gap-3">
                       <div className="font-semibold text-foreground group-hover:text-primary">{p.name}</div>
                       <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase text-primary">{p.status}</span>
                     </div>
-                    {p.industry && <div className="mt-1 text-xs text-muted-foreground">{p.industry}</div>}
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {p.is_priority && <PriorityBadge />}
+                      {p.is_featured && <FeaturedBadge />}
+                    </div>
+                    {p.industry && <div className="mt-2 text-xs text-muted-foreground">{p.industry}</div>}
                     {p.funding_needed && <div className="mt-3 text-sm">Funding goal: <span className="font-medium">{p.funding_needed}</span></div>}
                     <div className="mt-4 inline-flex items-center gap-1 text-xs text-primary"><FileText className="h-3 w-3" /> Open workspace →</div>
                   </Link>
