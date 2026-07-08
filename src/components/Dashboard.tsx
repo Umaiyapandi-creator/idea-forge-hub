@@ -60,7 +60,15 @@ export function Dashboard() {
   const { user, loading } = useAuth({ redirectIfUnauthed: true });
   const { isPremium } = usePlan(user?.id);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showAd, setShowAd] = useState(true);
+  const [showAd, setShowAd] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem("wtd_cert_popup_shown") !== "1";
+  });
+  useEffect(() => {
+    if (!showAd && typeof window !== "undefined") {
+      sessionStorage.setItem("wtd_cert_popup_shown", "1");
+    }
+  }, [showAd]);
   const [section, setSection] = useState<Section>("profile");
   const [industry, setIndustry] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
