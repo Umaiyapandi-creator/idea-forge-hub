@@ -54,6 +54,7 @@ function Page() {
         funding_needed: f.funding.trim() || null,
         public_summary: f.summary.trim() || null,
         is_priority: isPremium,
+        status: "pending",
       }).select("id").single();
       if (error) throw error;
       const pid = project.id;
