@@ -20,6 +20,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectNewRouteImport } from './routes/project.new'
 import { Route as ProjectIdRouteImport } from './routes/project.$id'
+import { Route as FounderApprovalsRouteImport } from './routes/founder.approvals'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -76,6 +77,11 @@ const ProjectIdRoute = ProjectIdRouteImport.update({
   path: '/project/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FounderApprovalsRoute = FounderApprovalsRouteImport.update({
+  id: '/founder/approvals',
+  path: '/founder/approvals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/investor': typeof InvestorRoute
   '/premium': typeof PremiumRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/founder/approvals': typeof FounderApprovalsRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
 }
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/investor': typeof InvestorRoute
   '/premium': typeof PremiumRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/founder/approvals': typeof FounderApprovalsRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
 }
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/investor': typeof InvestorRoute
   '/premium': typeof PremiumRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/founder/approvals': typeof FounderApprovalsRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
 }
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/investor'
     | '/premium'
     | '/reset-password'
+    | '/founder/approvals'
     | '/project/$id'
     | '/project/new'
   fileRoutesByTo: FileRoutesByTo
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/investor'
     | '/premium'
     | '/reset-password'
+    | '/founder/approvals'
     | '/project/$id'
     | '/project/new'
   id:
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/investor'
     | '/premium'
     | '/reset-password'
+    | '/founder/approvals'
     | '/project/$id'
     | '/project/new'
   fileRoutesById: FileRoutesById
@@ -169,6 +181,7 @@ export interface RootRouteChildren {
   InvestorRoute: typeof InvestorRoute
   PremiumRoute: typeof PremiumRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  FounderApprovalsRoute: typeof FounderApprovalsRoute
   ProjectIdRoute: typeof ProjectIdRoute
   ProjectNewRoute: typeof ProjectNewRoute
 }
@@ -252,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/founder/approvals': {
+      id: '/founder/approvals'
+      path: '/founder/approvals'
+      fullPath: '/founder/approvals'
+      preLoaderRoute: typeof FounderApprovalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -265,6 +285,7 @@ const rootRouteChildren: RootRouteChildren = {
   InvestorRoute: InvestorRoute,
   PremiumRoute: PremiumRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  FounderApprovalsRoute: FounderApprovalsRoute,
   ProjectIdRoute: ProjectIdRoute,
   ProjectNewRoute: ProjectNewRoute,
 }
