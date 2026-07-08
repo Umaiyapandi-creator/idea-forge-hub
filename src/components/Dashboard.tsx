@@ -60,7 +60,15 @@ export function Dashboard() {
   const { user, loading } = useAuth({ redirectIfUnauthed: true });
   const { isPremium } = usePlan(user?.id);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showAd, setShowAd] = useState(true);
+  const [showAd, setShowAd] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem("wtd_cert_popup_shown") !== "1";
+  });
+  useEffect(() => {
+    if (!showAd && typeof window !== "undefined") {
+      sessionStorage.setItem("wtd_cert_popup_shown", "1");
+    }
+  }, [showAd]);
   const [section, setSection] = useState<Section>("profile");
   const [industry, setIndustry] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -242,6 +250,11 @@ export function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
             {isPremium && <PremiumBadge className="hidden sm:inline-flex" />}
+            {(user.role === "founder" || user.role === "admin") && (
+              <Link to="/founder/approvals" className="hidden sm:inline-flex">
+                <Button variant="outline" size="sm" className="gap-1">Approvals</Button>
+              </Link>
+            )}
             <Link to="/premium" className="hidden sm:inline-flex">
               <Button variant={isPremium ? "outline" : "default"} size="sm" className="gap-1">
                 <Crown className="h-4 w-4" /> {isPremium ? "Premium" : "Upgrade"}
