@@ -250,6 +250,11 @@ export function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
             {isPremium && <PremiumBadge className="hidden sm:inline-flex" />}
+            {(user.role === "founder" || user.role === "admin") && (
+              <Link to="/founder/approvals" className="hidden sm:inline-flex">
+                <Button variant="outline" size="sm" className="gap-1">Approvals</Button>
+              </Link>
+            )}
             <Link to="/premium" className="hidden sm:inline-flex">
               <Button variant={isPremium ? "outline" : "default"} size="sm" className="gap-1">
                 <Crown className="h-4 w-4" /> {isPremium ? "Premium" : "Upgrade"}
