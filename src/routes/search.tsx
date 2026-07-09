@@ -1,14 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { Search as SearchIcon, Loader2 } from "lucide-react";
 import { DashboardShell } from "@/components/DashboardShell";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
-const searchSchema = z.object({ q: fallback(z.string(), "").default("") });
+const searchSchema = z.object({ q: z.string().catch("").default("") });
 
 export const Route = createFileRoute("/search")({
   head: () => ({ meta: [{ title: "Search — Way to Dream" }] }),
