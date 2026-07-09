@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PremiumRouteImport } from './routes/premium'
 import { Route as InvestorRouteImport } from './routes/investor'
@@ -22,6 +23,11 @@ import { Route as ProjectNewRouteImport } from './routes/project.new'
 import { Route as ProjectIdRouteImport } from './routes/project.$id'
 import { Route as FounderApprovalsRouteImport } from './routes/founder.approvals'
 
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/investor': typeof InvestorRoute
   '/premium': typeof PremiumRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
   '/founder/approvals': typeof FounderApprovalsRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/investor': typeof InvestorRoute
   '/premium': typeof PremiumRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
   '/founder/approvals': typeof FounderApprovalsRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/investor': typeof InvestorRoute
   '/premium': typeof PremiumRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/search': typeof SearchRoute
   '/founder/approvals': typeof FounderApprovalsRoute
   '/project/$id': typeof ProjectIdRoute
   '/project/new': typeof ProjectNewRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/investor'
     | '/premium'
     | '/reset-password'
+    | '/search'
     | '/founder/approvals'
     | '/project/$id'
     | '/project/new'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/investor'
     | '/premium'
     | '/reset-password'
+    | '/search'
     | '/founder/approvals'
     | '/project/$id'
     | '/project/new'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/investor'
     | '/premium'
     | '/reset-password'
+    | '/search'
     | '/founder/approvals'
     | '/project/$id'
     | '/project/new'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   InvestorRoute: typeof InvestorRoute
   PremiumRoute: typeof PremiumRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SearchRoute: typeof SearchRoute
   FounderApprovalsRoute: typeof FounderApprovalsRoute
   ProjectIdRoute: typeof ProjectIdRoute
   ProjectNewRoute: typeof ProjectNewRoute
@@ -188,6 +201,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   InvestorRoute: InvestorRoute,
   PremiumRoute: PremiumRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SearchRoute: SearchRoute,
   FounderApprovalsRoute: FounderApprovalsRoute,
   ProjectIdRoute: ProjectIdRoute,
   ProjectNewRoute: ProjectNewRoute,

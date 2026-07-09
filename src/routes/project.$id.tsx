@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { usePlan } from "@/lib/premium";
 import { PremiumBadge, FeaturedBadge, PriorityBadge } from "@/components/PremiumBadge";
+import { ProjectChat } from "@/components/ProjectChat";
 import type { AiAnalysis } from "@/lib/ai-analysis.functions";
 
 export const Route = createFileRoute("/project/$id")({
@@ -80,6 +81,7 @@ function Page() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
           <TabsTrigger value="docs">Documents</TabsTrigger>
+          <TabsTrigger value="chat">Chat</TabsTrigger>
           <TabsTrigger value="team">Team</TabsTrigger>
           <TabsTrigger value="investors">Investors</TabsTrigger>
         </TabsList>
@@ -123,6 +125,13 @@ function Page() {
             <span className="text-sm">Documents are NDA-protected. Request access to view.</span>
           </div>
           <Button className="mt-4" onClick={() => toast.success("Access request sent to founder")}>Request access</Button>
+        </TabsContent>
+        <TabsContent value="chat" className="mt-6">
+          {user ? (
+            <ProjectChat projectId={project.id} userId={user.id} />
+          ) : (
+            <p className="text-sm text-muted-foreground">Sign in to chat.</p>
+          )}
         </TabsContent>
         <TabsContent value="team" className="mt-6 rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
           No team members yet.
