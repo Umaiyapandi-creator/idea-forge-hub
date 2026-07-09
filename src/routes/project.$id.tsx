@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-store";
 import { usePlan } from "@/lib/premium";
 import { PremiumBadge, FeaturedBadge, PriorityBadge } from "@/components/PremiumBadge";
+import { ProjectChat } from "@/components/ProjectChat";
 import type { AiAnalysis } from "@/lib/ai-analysis.functions";
 
 export const Route = createFileRoute("/project/$id")({
@@ -80,6 +81,7 @@ function Page() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
           <TabsTrigger value="docs">Documents</TabsTrigger>
+          <TabsTrigger value="chat">Chat</TabsTrigger>
           <TabsTrigger value="team">Team</TabsTrigger>
           <TabsTrigger value="investors">Investors</TabsTrigger>
         </TabsList>
