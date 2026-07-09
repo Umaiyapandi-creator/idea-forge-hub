@@ -1,8 +1,10 @@
 import { useNavigate } from "@tanstack/react-router";
-import { LogOut, Loader2 } from "lucide-react";
+import { LogOut, Loader2, Search as SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { signOut, useAuth, type Role } from "@/lib/auth-store";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/Logo";
 
