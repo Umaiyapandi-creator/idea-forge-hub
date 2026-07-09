@@ -126,6 +126,13 @@ function Page() {
           </div>
           <Button className="mt-4" onClick={() => toast.success("Access request sent to founder")}>Request access</Button>
         </TabsContent>
+        <TabsContent value="chat" className="mt-6">
+          {user ? (
+            <ProjectChat projectId={project.id} userId={user.id} />
+          ) : (
+            <p className="text-sm text-muted-foreground">Sign in to chat.</p>
+          )}
+        </TabsContent>
         <TabsContent value="team" className="mt-6 rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
           No team members yet.
         </TabsContent>
