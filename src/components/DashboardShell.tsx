@@ -19,6 +19,7 @@ interface Props {
 export function DashboardShell({ title, subtitle, actions, children, requireRole }: Props) {
   const navigate = useNavigate();
   const { user, loading } = useAuth({ redirectIfUnauthed: true, requireRole });
+  const [q, setQ] = useState("");
 
   const logout = async () => {
     await signOut();
@@ -37,8 +38,15 @@ export function DashboardShell({ title, subtitle, actions, children, requireRole
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-        <div className="container mx-auto flex h-16 items-center justify-between px-6">
+        <div className="container mx-auto flex h-16 items-center justify-between gap-3 px-6">
           <Logo size={32} />
+          <form
+            onSubmit={(e) => { e.preventDefault(); navigate({ to: "/search", search: { q } }); }}
+            className="relative hidden max-w-md flex-1 md:block"
+          >
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects…" className="pl-9" />
+          </form>
           <div className="flex items-center gap-3">
             <div className="hidden text-right text-sm md:block">
               <div className="font-medium leading-tight">{user.name}</div>
