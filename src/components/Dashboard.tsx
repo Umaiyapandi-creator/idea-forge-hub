@@ -43,7 +43,7 @@ const CONTACTS = [
   { title: "Customer Service", email: "careofwaytodream@gmail.com" },
 ];
 
-type Section = "profile" | "projects" | "directors" | "feedback" | "founders" | "contact";
+type Section = "profile" | "projects" | "leaderboard" | "directors" | "feedback" | "founders" | "contact";
 
 type ProjectRow = {
   id: string;
