@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
-import { Menu, LogOut, Loader2, Mail, Award, MessageSquare, User, Camera, FolderKanban, Plus, FileText, Crown, Star } from "lucide-react";
+import { Menu, LogOut, Loader2, Mail, Award, MessageSquare, User, Camera, FolderKanban, Plus, FileText, Crown, Star, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
