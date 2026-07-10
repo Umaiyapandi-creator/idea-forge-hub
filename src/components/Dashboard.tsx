@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
-import { Menu, LogOut, Loader2, Mail, Award, MessageSquare, User, Camera, FolderKanban, Plus, FileText, Crown, Star } from "lucide-react";
+import { Menu, LogOut, Loader2, Mail, Award, MessageSquare, User, Camera, FolderKanban, Plus, FileText, Crown, Star, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -38,11 +38,12 @@ const FOUNDERS = [
 
 const CONTACTS = [
   { title: "Founder", email: "founder@waytodream.sbs" },
+  { title: "Founder", email: "founderofwaytodream@gmail.com" },
   { title: "Co-Founder", email: "cofounderwaytodream@gmail.com" },
   { title: "Customer Service", email: "careofwaytodream@gmail.com" },
 ];
 
-type Section = "profile" | "projects" | "directors" | "feedback" | "founders" | "contact";
+type Section = "profile" | "projects" | "leaderboard" | "directors" | "feedback" | "founders" | "contact";
 
 type ProjectRow = {
   id: string;
@@ -168,6 +169,7 @@ export function Dashboard() {
   const navItems: { id: Section; label: string; icon: typeof User }[] = [
     { id: "profile", label: "Profile", icon: User },
     { id: "projects", label: "Projects", icon: FolderKanban },
+    { id: "leaderboard", label: "Leaderboard", icon: Trophy },
     { id: "directors", label: "Directors", icon: Award },
     { id: "founders", label: "Founders", icon: Award },
     { id: "feedback", label: "Feedback", icon: MessageSquare },
@@ -365,6 +367,7 @@ export function Dashboard() {
           </section>
         )}
 
+        {section === "leaderboard" && <Leaderboard />}
         {section === "directors" && <CertGrid title="Directors" items={DIRECTORS} onOpen={setViewer} />}
         {section === "founders" && <CertGrid title="Founders" items={FOUNDERS} onOpen={setViewer} />}
 
@@ -479,6 +482,143 @@ function CertGrid({
           </button>
         ))}
       </div>
+    </section>
+  );
+}
+
+type LbRow = {
+  owner_id: string;
+  name: string;
+  avatar_url: string | null;
+  projects: number;
+  total: number;
+  avg: number;
+  best: string;
+};
+
+function Leaderboard() {
+  const [rows, setRows] = useState<LbRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    setLoading(true);
+    const { data: projects } = await supabase
+      .from("projects")
+      .select("id,name,owner_id,ai_analysis")
+      .not("ai_analysis", "is", null);
+    const list = (projects ?? []) as Array<{ id: string; name: string; owner_id: string; ai_analysis: { market_potential?: number; innovation?: number; startup_readiness?: number } | null }>;
+
+    const scoreOf = (a: { market_potential?: number; innovation?: number; startup_readiness?: number } | null) => {
+      if (!a) return 0;
+      const m = Number(a.market_potential ?? 0);
+      const i = Number(a.innovation ?? 0);
+      const s = Number(a.startup_readiness ?? 0);
+      return Math.round((m + i + s) / 3);
+    };
+
+    const byOwner = new Map<string, { total: number; count: number; best: { name: string; score: number } }>();
+    for (const p of list) {
+      const s = scoreOf(p.ai_analysis);
+      const cur = byOwner.get(p.owner_id) ?? { total: 0, count: 0, best: { name: p.name, score: -1 } };
+      cur.total += s;
+      cur.count += 1;
+      if (s > cur.best.score) cur.best = { name: p.name, score: s };
+      byOwner.set(p.owner_id, cur);
+    }
+
+    const ownerIds = [...byOwner.keys()];
+    let profiles: Array<{ id: string; full_name: string | null; avatar_url: string | null }> = [];
+    if (ownerIds.length) {
+      const { data } = await supabase.from("profiles").select("id,full_name,avatar_url").in("id", ownerIds);
+      profiles = (data ?? []) as typeof profiles;
+    }
+    const profMap = new Map(profiles.map((p) => [p.id, p]));
+
+    const built: LbRow[] = ownerIds.map((id) => {
+      const agg = byOwner.get(id)!;
+      const prof = profMap.get(id);
+      return {
+        owner_id: id,
+        name: prof?.full_name ?? "Innovator",
+        avatar_url: prof?.avatar_url ?? null,
+        projects: agg.count,
+        total: agg.total,
+        avg: Math.round(agg.total / agg.count),
+        best: agg.best.name,
+      };
+    }).sort((a, b) => b.avg - a.avg || b.total - a.total);
+
+    setRows(built);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+    const channel = supabase
+      .channel("leaderboard-projects")
+      .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  if (loading) {
+    return <div className="grid place-items-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
+  }
+
+  return (
+    <section>
+      <div className="mb-6 flex items-center gap-3">
+        <Trophy className="h-6 w-6 text-primary" />
+        <div>
+          <h2 className="text-2xl font-bold">Innovator Leaderboard</h2>
+          <p className="text-sm text-muted-foreground">Live ranking by AI analysis scores across all projects</p>
+        </div>
+      </div>
+      {rows.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
+          No AI-analyzed projects yet. Rankings will appear once projects receive analysis.
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 text-left">#</th>
+                <th className="px-4 py-3 text-left">Innovator</th>
+                <th className="px-4 py-3 text-left">Top Project</th>
+                <th className="px-4 py-3 text-right">Projects</th>
+                <th className="px-4 py-3 text-right">Avg Score</th>
+                <th className="px-4 py-3 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => {
+                const rank = i + 1;
+                const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
+                return (
+                  <tr key={r.owner_id} className="border-t border-border">
+                    <td className="px-4 py-3 font-semibold">
+                      {medal ? <span className="text-lg">{medal}</span> : <span className="text-muted-foreground">{rank}</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-primary/10 text-xs font-bold text-primary">
+                          {r.avatar_url ? <img src={r.avatar_url} alt={r.name} className="h-full w-full object-cover" /> : r.name.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-medium text-foreground">{r.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{r.best}</td>
+                    <td className="px-4 py-3 text-right">{r.projects}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-primary">{r.avg}</td>
+                    <td className="px-4 py-3 text-right text-muted-foreground">{r.total}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }
