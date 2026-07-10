@@ -508,7 +508,7 @@ function Leaderboard() {
       .not("ai_analysis", "is", null);
     const list = (projects ?? []) as Array<{ id: string; name: string; owner_id: string; ai_analysis: { market_potential?: number; innovation?: number; startup_readiness?: number } | null }>;
 
-    const scoreOf = (a: LbRow extends never ? never : { market_potential?: number; innovation?: number; startup_readiness?: number } | null) => {
+    const scoreOf = (a: { market_potential?: number; innovation?: number; startup_readiness?: number } | null) => {
       if (!a) return 0;
       const m = Number(a.market_potential ?? 0);
       const i = Number(a.innovation ?? 0);
