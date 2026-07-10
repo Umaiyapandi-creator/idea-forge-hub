@@ -45,7 +45,7 @@ export function DashboardShell({ title, subtitle, actions, children, requireRole
             className="relative hidden max-w-md flex-1 md:block"
           >
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects…" className="pl-9" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search people by name…" className="pl-9" />
           </form>
           <div className="flex items-center gap-3">
             <div className="hidden text-right text-sm md:block">
