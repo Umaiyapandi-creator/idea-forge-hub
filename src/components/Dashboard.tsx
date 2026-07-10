@@ -38,6 +38,7 @@ const FOUNDERS = [
 
 const CONTACTS = [
   { title: "Founder", email: "founder@waytodream.sbs" },
+  { title: "Founder", email: "founderofwaytodream@gmail.com" },
   { title: "Co-Founder", email: "cofounderwaytodream@gmail.com" },
   { title: "Customer Service", email: "careofwaytodream@gmail.com" },
 ];
