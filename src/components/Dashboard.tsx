@@ -367,6 +367,7 @@ export function Dashboard() {
           </section>
         )}
 
+        {section === "leaderboard" && <Leaderboard />}
         {section === "directors" && <CertGrid title="Directors" items={DIRECTORS} onOpen={setViewer} />}
         {section === "founders" && <CertGrid title="Founders" items={FOUNDERS} onOpen={setViewer} />}
 
