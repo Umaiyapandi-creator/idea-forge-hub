@@ -1,0 +1,1 @@
+CREATE POLICY "Authenticated can view profiles for search" ON public.profiles FOR SELECT TO authenticated USING (true);
