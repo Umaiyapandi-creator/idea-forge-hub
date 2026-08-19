@@ -16,7 +16,7 @@ export function Logo({
   const inner = (
     <div className={`flex items-center gap-2 ${className}`}>
       <img
-        src="/certs/wtd-logo.jpeg"
+        src="public/certs/wtd-logo.jpeg"
         alt="Way to Dream logo"
         width={size}
         height={size}
