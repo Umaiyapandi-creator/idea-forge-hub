@@ -12,7 +12,7 @@ export function Logo({ size = 36, showText = true, to = "/", className = "" }: P
   const inner = (
     <div className={`flex items-center gap-2 ${className}`}>
       <img
-        src={logoAsset.url}
+        src={"/certs/web.jpeg"}
         alt="Way to Dream logo"
         width={size}
         height={size}
