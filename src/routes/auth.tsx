@@ -127,6 +127,7 @@ function AuthPage() {
           toast.error("Please fill in all fields");
           return;
         }
+        if (tab === "signup") {
         const { data, error } = await supabase.auth.signUp({
   email: form.email.trim().toLowerCase(),
   password: form.password,
@@ -147,6 +148,7 @@ if (error) {
 }
 
 toast.success("Account created. Please check your email for confirmation.");
+        }
          else {
           const { error } = await supabase.auth.signInWithPassword({
             email: form.email,
