@@ -127,18 +127,27 @@ function AuthPage() {
           toast.error("Please fill in all fields");
           return;
         }
-        if (tab === "signup") {
-          const { error } = await supabase.auth.signUp({
-            email: form.email,
-            password: form.password,
-            options: {
-              emailRedirectTo: `${window.location.origin}/auth`,
-              data: { full_name: form.name, role: role === "founder" ? "innovator" : role },
-            },
-          });
-          if (error) throw error;
-          toast.success("Account created — welcome!");
-        } else {
+        const { data, error } = await supabase.auth.signUp({
+  email: form.email.trim().toLowerCase(),
+  password: form.password,
+  options: {
+    emailRedirectTo: "https://waytodream.sbs/auth",
+    data: {
+      full_name: form.name,
+      role: role === "founder" ? "innovator" : role,
+    },
+  },
+});
+
+console.log("SIGNUP DATA:", data);
+console.log("SIGNUP ERROR:", error);
+
+if (error) {
+  throw new Error(`Signup failed: ${error.message}`);
+}
+
+toast.success("Account created. Please check your email for confirmation.");
+         else {
           const { error } = await supabase.auth.signInWithPassword({
             email: form.email,
             password: form.password,
