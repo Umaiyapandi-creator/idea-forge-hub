@@ -45,7 +45,7 @@ function Page() {
     if (!f.name.trim() || !f.problem.trim()) { toast.error("Idea name and problem statement are required"); return; }
     setBusy(true);
     try {
-      const { data: project, error } = await supabase.from("projects").insert({
+      const { data: project, error } = await supabase.from("data").insert({
         owner_id: user.id,
         name: f.name.trim(),
         problem: f.problem.trim(),
@@ -71,7 +71,7 @@ function Page() {
       if (ppt) patch.ppt_path = await upload("project-docs", ppt, "ppt");
       if (pdf) patch.pdf_path = await upload("project-docs", pdf, "pdf");
       if (Object.keys(patch).length) {
-        const { error: upErr } = await supabase.from("projects").update(patch).eq("id", pid);
+        const { error: upErr } = await supabase.from("data").update(patch).eq("id", pid);
         if (upErr) throw upErr;
       }
 
