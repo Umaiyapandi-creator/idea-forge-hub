@@ -32,7 +32,7 @@ function Page() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("projects").select("id", { count: "exact", head: true }).eq("owner_id", user.id)
+    supabase.from("data").select("id", { count: "exact", head: true }).eq("owner_id", user.id)
       .then(({ count }) => setExistingCount(count ?? 0));
   }, [user]);
 
