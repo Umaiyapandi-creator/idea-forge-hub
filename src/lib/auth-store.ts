@@ -1,9 +1,13 @@
-// Supabase-backed session helpers + React hook with role lookup.
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Role = "innovator" | "developer" | "investor" | "admin" | "founder";
+export type Role =
+  | "innovator"
+  | "developer"
+  | "investor"
+  | "admin"
+  | "founder";
 
 export const FOUNDER_EMAILS = [
   "esakkimuthu01447@gmail.com",
@@ -15,87 +19,180 @@ export interface SessionUser {
   name: string;
   email: string;
   role: Role;
+  approvalStatus: "pending" | "approved" | "rejected";
 }
 
 export function dashboardPathFor(role: Role): string {
   switch (role) {
-    case "innovator": return "/innovator";
-    case "developer": return "/developer";
-    case "investor": return "/investor";
+    case "innovator":
+      return "/innovator";
+
+    case "developer":
+      return "/developer";
+
+    case "investor":
+      return "/investor";
+
     case "admin":
     case "founder":
       return "/admin";
+
+    default:
+      return "/innovator";
   }
 }
 
-async function loadUser(userId: string, email: string | undefined): Promise<SessionUser | null> {
+async function loadUser(
+  userId: string,
+  email: string | undefined
+): Promise<SessionUser | null> {
+  const emailLc = (email ?? "").trim().toLowerCase();
+
   const [{ data: profile }, { data: roles }] = await Promise.all([
-    supabase.from("profiles").select("full_name, email").eq("id", userId).maybeSingle(),
-    supabase.from("user_roles").select("role").eq("user_id", userId),
+    supabase
+      .from("profiles")
+      .select("full_name, email, approval_status")
+      .eq("id", userId)
+      .maybeSingle(),
+
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId),
   ]);
-  // Prefer highest-privilege role if user has multiple
+
+  // Founder is determined by the protected founder email list.
+  const isFounder = FOUNDER_EMAILS.includes(emailLc);
+
   const rolesList = (roles ?? []).map((r) => r.role as Role);
-  const role: Role =
-    rolesList.includes("founder") ? "founder" :
-    rolesList.includes("admin") ? "admin" :
-    (rolesList[0] ?? "innovator");
+
+  const role: Role = isFounder
+    ? "founder"
+    : rolesList.includes("admin")
+      ? "admin"
+      : rolesList[0] ?? "innovator";
+
+  const approvalStatus =
+    isFounder
+      ? "approved"
+      : (profile?.approval_status as
+          | "pending"
+          | "approved"
+          | "rejected") ?? "pending";
+
   return {
     id: userId,
     email: profile?.email ?? email ?? "",
-    name: profile?.full_name ?? (email?.split("@")[0] ?? "User"),
+    name:
+      profile?.full_name ??
+      email?.split("@")[0] ??
+      "User",
     role,
+    approvalStatus,
   };
 }
 
-/** React hook: returns { user, loading }. Optionally redirects when unauthenticated. */
-export function useAuth(options?: { redirectIfUnauthed?: boolean; requireRole?: Role }) {
+export function useAuth(options?: {
+  redirectIfUnauthed?: boolean;
+  requireRole?: Role;
+}) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const handleSession = async (session: any) => {
       if (!mounted) return;
+
       if (!session) {
         setUser(null);
         setLoading(false);
-        if (options?.redirectIfUnauthed) navigate({ to: "/auth" });
-      } else {
-        setTimeout(async () => {
-          const u = await loadUser(session.user.id, session.user.email);
-          if (!mounted) return;
-          setUser(u);
-          setLoading(false);
-          if (options?.requireRole && u && u.role !== options.requireRole && u.role !== "admin" && u.role !== "founder") {
-            navigate({ to: dashboardPathFor(u.role) });
-          }
-        }, 0);
-      }
-    });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!mounted) return;
-      if (!session) {
-        setLoading(false);
-        if (options?.redirectIfUnauthed) navigate({ to: "/auth" });
+        if (options?.redirectIfUnauthed) {
+          navigate({ to: "/auth" });
+        }
+
         return;
       }
-      const u = await loadUser(session.user.id, session.user.email);
-      if (!mounted) return;
+
+      const u = await loadUser(
+        session.user.id,
+        session.user.email
+      );
+
+      if (!mounted || !u) return;
+
       setUser(u);
       setLoading(false);
-      if (options?.requireRole && u && u.role !== options.requireRole && u.role !== "admin" && u.role !== "founder") {
-        navigate({ to: dashboardPathFor(u.role) });
+
+      const isFounder =
+        u.role === "founder" ||
+        FOUNDER_EMAILS.includes(
+          u.email.trim().toLowerCase()
+        );
+
+      // Founder always goes directly to founder/admin area.
+      if (isFounder) {
+        if (
+          options?.requireRole &&
+          options.requireRole !== "founder" &&
+          options.requireRole !== "admin"
+        ) {
+          navigate({
+            to: dashboardPathFor("founder"),
+          });
+        }
+
+        return;
       }
-    });
 
-    return () => { mounted = false; subscription.unsubscribe(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      // Normal users must be approved.
+      if (u.approvalStatus !== "approved") {
+        navigate({ to: "/pending" });
+        return;
+      }
 
-  return { user, loading };
+      // Role protection.
+      if (
+        options?.requireRole &&
+        u.role !== options.requireRole &&
+        u.role !== "admin"
+      ) {
+        navigate({
+          to: dashboardPathFor(u.role),
+        });
+      }
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setTimeout(() => {
+          handleSession(session);
+        }, 0);
+      }
+    );
+
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        handleSession(session);
+      });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  return {
+    user,
+    loading,
+  };
 }
 
 export async function signOut() {
