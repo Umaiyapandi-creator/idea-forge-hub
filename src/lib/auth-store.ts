@@ -46,49 +46,46 @@ async function loadUser(
   userId: string,
   email: string | undefined
 ): Promise<SessionUser | null> {
-  const emailLc = (email ?? "").trim().toLowerCase();
 
-  const [{ data: profile }, { data: roles }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("full_name, email, approval_status")
-      .eq("id", userId)
-      .maybeSingle(),
+  const [{ data: profile }, { data: roles, error: roleError }] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", userId)
+        .maybeSingle(),
 
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId),
-  ]);
+      supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId),
+    ]);
 
-  // Founder is determined by the protected founder email list.
-  const isFounder = FOUNDER_EMAILS.includes(emailLc);
+  console.log("AUTH USER ID:", userId);
+  console.log("AUTH EMAIL:", email);
+  console.log("USER ROLES:", roles);
+  console.log("ROLE ERROR:", roleError);
 
-  const rolesList = (roles ?? []).map((r) => r.role as Role);
+  const rolesList = (roles ?? []).map(
+    (r) => r.role as Role
+  );
 
-  const role: Role = isFounder
-    ? "founder"
-    : rolesList.includes("admin")
-      ? "admin"
-      : rolesList[0] ?? "innovator";
+  const role: Role =
+    rolesList.includes("founder")
+      ? "founder"
+      : rolesList.includes("admin")
+        ? "admin"
+        : (rolesList[0] ?? "innovator");
 
-  const approvalStatus =
-    isFounder
-      ? "approved"
-      : (profile?.approval_status as
-          | "pending"
-          | "approved"
-          | "rejected") ?? "pending";
+  console.log("FINAL USER ROLE:", role);
 
   return {
     id: userId,
     email: profile?.email ?? email ?? "",
     name:
       profile?.full_name ??
-      email?.split("@")[0] ??
-      "User",
+      (email?.split("@")[0] ?? "User"),
     role,
-    approvalStatus,
   };
 }
 
