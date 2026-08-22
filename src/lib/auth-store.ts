@@ -48,10 +48,10 @@ async function loadUser(
 ): Promise<SessionUser | null> {
   const [{ data: profile }, { data: roles }] = await Promise.all([
     supabase
-      .from("profiles")
-      .select("full_name, email")
-      .eq("id", userId)
-      .maybeSingle(),
+     .from("profiles")
+     .select("full_name, email, approval_status")
+     .eq("id", userId)
+     .maybeSingle()
 
     supabase
       .from("user_roles")
@@ -84,13 +84,15 @@ async function loadUser(
   console.log("FINAL ROLE:", role);
 
   return {
-    id: userId,
-    email: userEmail,
-    name:
-      profile?.full_name ??
-      (userEmail.split("@")[0] || "User"),
-    role,
-  };
+  id: userId,
+  email: userEmail,
+  name:
+    profile?.full_name ??
+    (userEmail.split("@")[0] || "User"),
+  role,
+  approvalStatus:
+    profile?.approval_status ?? "pending",
+};
 }
 
 export function useAuth(options?: {
