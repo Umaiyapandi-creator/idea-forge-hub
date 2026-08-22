@@ -135,7 +135,7 @@ function AuthPage() {
     emailRedirectTo: "https://waytodream.sbs/auth",
     data: {
       full_name: form.name,
-      role: role === "founder" ? "innovator" : role,
+      role : role,
     },
   },
 });
