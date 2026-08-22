@@ -46,45 +46,49 @@ async function loadUser(
   userId: string,
   email: string | undefined
 ): Promise<SessionUser | null> {
+  const [{ data: profile }, { data: roles }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", userId)
+      .maybeSingle(),
 
-  const [{ data: profile }, { data: roles, error: roleError }] =
-    await Promise.all([
-      supabase
-        .from("profiles")
-        .select("full_name, email")
-        .eq("id", userId)
-        .maybeSingle(),
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId),
+  ]);
 
-      supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId),
-    ]);
+  const userEmail = (
+    profile?.email ??
+    email ??
+    ""
+  ).trim().toLowerCase();
 
-  console.log("AUTH USER ID:", userId);
-  console.log("AUTH EMAIL:", email);
-  console.log("USER ROLES:", roles);
-  console.log("ROLE ERROR:", roleError);
+  // Founder emails always get Founder role
+  const isFounder = FOUNDER_EMAILS.includes(userEmail);
 
   const rolesList = (roles ?? []).map(
     (r) => r.role as Role
   );
 
   const role: Role =
-    rolesList.includes("founder")
+    isFounder
       ? "founder"
       : rolesList.includes("admin")
         ? "admin"
         : (rolesList[0] ?? "innovator");
 
-  console.log("FINAL USER ROLE:", role);
+  console.log("AUTH EMAIL:", userEmail);
+  console.log("DATABASE ROLES:", rolesList);
+  console.log("FINAL ROLE:", role);
 
   return {
     id: userId,
-    email: profile?.email ?? email ?? "",
+    email: userEmail,
     name:
       profile?.full_name ??
-      (email?.split("@")[0] ?? "User"),
+      (userEmail.split("@")[0] || "User"),
     role,
   };
 }
