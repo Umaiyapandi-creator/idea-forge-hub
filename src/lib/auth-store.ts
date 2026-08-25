@@ -77,7 +77,7 @@ async function loadUser(
       ? "founder"
       : rolesList.includes("admin")
         ? "admin"
-        : (rolesList[0] ?? "innovator");
+        : (rolesList[0] ?? "founder");
 
   console.log("AUTH EMAIL:", userEmail);
   console.log("DATABASE ROLES:", rolesList);
