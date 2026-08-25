@@ -64,12 +64,13 @@ function AuthPage() {
   // Auto-redirect if already logged in
   useEffect(() => {
     let mounted = true;
-    const route = async (userId: string) => {
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-      const r = (roles?.[0]?.role as Role) ?? "innovator";
+    const { data: roles, error } = await supabase
+  .from("user_roles")
+  .select("role")
+  .eq("user_id", userId);
+
+console.log("ROLE DATA:", roles);
+console.log("ROLE ERROR:", error);
       if (mounted) navigate({ to: dashboardPathFor(r) });
     };
     supabase.auth.getSession().then(({ data: { session } }) => {
