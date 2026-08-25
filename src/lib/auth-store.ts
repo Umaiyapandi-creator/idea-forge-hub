@@ -51,7 +51,7 @@ async function loadUser(
      .from("profiles")
      .select("full_name, email, approval_status")
      .eq("id", userId)
-     .maybeSingle()
+     .maybeSingle(),
 
     supabase
       .from("user_roles")
