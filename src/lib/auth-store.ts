@@ -60,10 +60,10 @@ async function loadUser(
   ]);
 
   const userEmail = (
-    profile?.email ??
-    email ??
-    ""
-  ).trim().toLowerCase();
+  email ??
+  profile?.email ??
+  ""
+).trim().toLowerCase();
 
   // Founder emails always get Founder role
   const isFounder = FOUNDER_EMAILS.includes(userEmail);
@@ -77,7 +77,7 @@ async function loadUser(
       ? "founder"
       : rolesList.includes("admin")
         ? "admin"
-        : (rolesList[0] ?? "founder");
+        : (rolesList[0] ?? "innovator");
 
   console.log("AUTH EMAIL:", userEmail);
   console.log("DATABASE ROLES:", rolesList);
