@@ -8,7 +8,6 @@ import {
   ExternalLink,
   Users,
 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { DashboardShell } from "@/components/DashboardShell";
 import {
@@ -68,10 +67,6 @@ function Page() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
 
-  // --------------------------------------------------
-  // CHECK FOUNDER / ADMIN ACCESS
-  // --------------------------------------------------
-
   useEffect(() => {
     if (!user) return;
 
@@ -80,10 +75,6 @@ function Page() {
       navigate({ to: "/auth" });
     }
   }, [user, navigate]);
-
-  // --------------------------------------------------
-  // LOAD DATA
-  // --------------------------------------------------
 
   const load = async () => {
     const [
@@ -135,10 +126,6 @@ function Page() {
     }
   }, [user]);
 
-  // --------------------------------------------------
-  // VIEW PAYMENT SCREENSHOT
-  // --------------------------------------------------
-
   const signedUrl = async (path: string) => {
     const { data, error } = await supabase.storage
       .from("payment-screenshots")
@@ -158,10 +145,7 @@ function Page() {
     }
   };
 
-  // --------------------------------------------------
   // USER APPROVE / REJECT
-  // --------------------------------------------------
-
   const decideUser = async (
     u: UserProfile,
     next: "approved" | "rejected"
@@ -198,10 +182,7 @@ function Page() {
     }
   };
 
-  // --------------------------------------------------
   // PREMIUM APPROVE / REJECT
-  // --------------------------------------------------
-
   const decidePremium = async (
     r: PReq,
     approve: boolean
@@ -243,27 +224,20 @@ function Page() {
       }
 
       toast.success(
-        approve
-          ? "Premium activated"
-          : "Rejected"
+        approve ? "Premium activated" : "Rejected"
       );
 
       await load();
     } catch (e) {
       toast.error(
-        e instanceof Error
-          ? e.message
-          : "Failed"
+        e instanceof Error ? e.message : "Failed"
       );
     } finally {
       setBusy(null);
     }
   };
 
-  // --------------------------------------------------
   // PROJECT APPROVE / REJECT
-  // --------------------------------------------------
-
   const decideProject = async (
     p: Proj,
     next: "approved" | "rejected"
@@ -296,10 +270,6 @@ function Page() {
     }
   };
 
-  // --------------------------------------------------
-  // LOADING
-  // --------------------------------------------------
-
   if (loading || !user) {
     return (
       <div className="grid min-h-screen place-items-center">
@@ -307,10 +277,6 @@ function Page() {
       </div>
     );
   }
-
-  // --------------------------------------------------
-  // PENDING COUNTS
-  // --------------------------------------------------
 
   const pendingUsers = users.filter(
     (u) => u.approval_status === "pending"
@@ -324,376 +290,293 @@ function Page() {
     (p) => p.status === "pending"
   );
 
-  // --------------------------------------------------
-  // PAGE
-  // --------------------------------------------------
-
   return (
     <DashboardShell
       title="Founder Approvals"
       subtitle="Review users, premium payments and project submissions"
       actions={
-        <Link
-          to="/admin"
-          className="w-full sm:w-auto"
-        >
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full sm:w-auto"
-          >
+        <Link to="/admin">
+          <Button variant="outline" size="sm">
             ← Dashboard
           </Button>
         </Link>
       }
     >
-      <div className="w-full min-w-0">
-        <Tabs defaultValue="users" className="w-full">
+      <Tabs defaultValue="users">
+        <TabsList className="w-full overflow-x-auto justify-start">
+          <TabsTrigger value="users">
+            <Users className="mr-1 h-4 w-4" />
+            Users ({pendingUsers.length})
+          </TabsTrigger>
 
-          {/* TABS */}
-          <TabsList className="flex w-full max-w-full justify-start gap-1 overflow-x-auto p-1">
-            <TabsTrigger
-              value="users"
-              className="shrink-0 whitespace-nowrap text-xs sm:text-sm"
+          <TabsTrigger value="premium">
+            Premium ({pendingPremium.length})
+          </TabsTrigger>
+
+          <TabsTrigger value="projects">
+            Projects ({pendingProjects.length})
+          </TabsTrigger>
+        </TabsList>
+
+        {/* USERS */}
+        <TabsContent
+          value="users"
+          className="mt-4 space-y-3"
+        >
+          {users.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No users yet.
+            </p>
+          )}
+
+          {users.map((u) => (
+            <div
+              key={u.id}
+              className="rounded-xl border border-border bg-card p-4"
             >
-              <Users className="mr-1 h-4 w-4" />
-              Users ({pendingUsers.length})
-            </TabsTrigger>
-
-            <TabsTrigger
-              value="premium"
-              className="shrink-0 whitespace-nowrap text-xs sm:text-sm"
-            >
-              Premium ({pendingPremium.length})
-            </TabsTrigger>
-
-            <TabsTrigger
-              value="projects"
-              className="shrink-0 whitespace-nowrap text-xs sm:text-sm"
-            >
-              Projects ({pendingProjects.length})
-            </TabsTrigger>
-          </TabsList>
-
-          {/* ==================================================
-              USERS
-          ================================================== */}
-
-          <TabsContent
-            value="users"
-            className="mt-4 space-y-3"
-          >
-            {users.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                No users yet.
-              </p>
-            )}
-
-            {users.map((u) => (
-              <div
-                key={u.id}
-                className="w-full min-w-0 rounded-xl border border-border bg-card p-3 sm:p-4"
-              >
-                <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-                  {/* USER DETAILS */}
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium">
-                      {u.full_name || "Unnamed user"}
-                    </div>
-
-                    <div className="break-all text-sm text-muted-foreground">
-                      {u.email}
-                    </div>
-
-                    <div className="text-xs text-muted-foreground">
-                      Joined{" "}
-                      {new Date(
-                        u.created_at
-                      ).toLocaleString()}
-                    </div>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="font-medium">
+                    {u.full_name || "Unnamed user"}
                   </div>
 
-                  {/* ACTIONS */}
-                  <div className="flex w-full gap-2 sm:w-auto">
-                    {u.approval_status === "pending" ? (
-                      <>
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            decideUser(
-                              u,
-                              "approved"
-                            )
-                          }
-                          disabled={
-                            busy === u.id
-                          }
-                          className="flex-1 gap-1 sm:flex-none"
-                        >
-                          {busy === u.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Check className="h-3 w-3" />
-                          )}
+                  <div className="text-sm text-muted-foreground">
+                    {u.email}
+                  </div>
 
-                          Approve
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() =>
-                            decideUser(
-                              u,
-                              "rejected"
-                            )
-                          }
-                          disabled={
-                            busy === u.id
-                          }
-                          className="flex-1 gap-1 sm:flex-none"
-                        >
-                          <X className="h-3 w-3" />
-                          Reject
-                        </Button>
-                      </>
-                    ) : (
-                      <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs uppercase ${
-                          u.approval_status ===
-                          "approved"
-                            ? "bg-primary/10 text-primary"
-                            : "bg-destructive/10 text-destructive"
-                        }`}
-                      >
-                        {u.approval_status}
-                      </span>
-                    )}
+                  <div className="text-xs text-muted-foreground">
+                    Joined{" "}
+                    {new Date(
+                      u.created_at
+                    ).toLocaleString()}
                   </div>
                 </div>
+
+                <div className="flex w-full gap-2 sm:w-auto">
+                  {u.approval_status === "pending" ? (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          decideUser(u, "approved")
+                        }
+                        disabled={busy === u.id}
+                        className="gap-1"
+                      >
+                        {busy === u.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Check className="h-3 w-3" />
+                        )}
+                        Approve
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() =>
+                          decideUser(u, "rejected")
+                        }
+                        disabled={busy === u.id}
+                        className="gap-1"
+                      >
+                        <X className="h-3 w-3" />
+                        Reject
+                      </Button>
+                    </>
+                  ) : (
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs uppercase ${
+                        u.approval_status === "approved"
+                          ? "bg-primary/10 text-primary"
+                          : "bg-destructive/10 text-destructive"
+                      }`}
+                    >
+                      {u.approval_status}
+                    </span>
+                  )}
+                </div>
               </div>
-            ))}
-          </TabsContent>
+            </div>
+          ))}
+        </TabsContent>
 
-          {/* ==================================================
-              PREMIUM
-          ================================================== */}
+        {/* PREMIUM */}
+        <TabsContent
+          value="premium"
+          className="mt-4 space-y-3"
+        >
+          {preqs.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No requests yet.
+            </p>
+          )}
 
-          <TabsContent
-            value="premium"
-            className="mt-4 space-y-3"
-          >
-            {preqs.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                No requests yet.
-              </p>
-            )}
-
-            {preqs.map((r) => (
-              <div
-                key={r.id}
-                className="w-full min-w-0 rounded-xl border border-border bg-card p-3 sm:p-4"
-              >
-                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
-                  {/* PAYMENT DETAILS */}
-                  <div className="min-w-0 flex-1">
-                    <div className="font-medium">
-                      ₹{r.amount} — {r.cycle}
-                    </div>
-
-                    <div className="break-all text-xs text-muted-foreground">
-                      User{" "}
-                      {r.user_id.slice(0, 8)}{" "}
-                      ·{" "}
-                      {new Date(
-                        r.created_at
-                      ).toLocaleString()}
-                    </div>
+          {preqs.map((r) => (
+            <div
+              key={r.id}
+              className="rounded-xl border border-border bg-card p-4"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="font-medium">
+                    ₹{r.amount} — {r.cycle}
                   </div>
 
-                  {/* ACTIONS */}
-                  <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-row">
+                  <div className="text-xs text-muted-foreground">
+                    User {r.user_id.slice(0, 8)} ·{" "}
+                    {new Date(
+                      r.created_at
+                    ).toLocaleString()}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      signedUrl(r.screenshot_path)
+                    }
+                    className="gap-1"
+                  >
+                    <ImageIcon className="h-3 w-3" />
+                    View proof
+                  </Button>
+
+                  {r.status === "pending" ? (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          decidePremium(r, true)
+                        }
+                        disabled={busy === r.id}
+                        className="gap-1"
+                      >
+                        <Check className="h-3 w-3" />
+                        Approve
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() =>
+                          decidePremium(r, false)
+                        }
+                        disabled={busy === r.id}
+                        className="gap-1"
+                      >
+                        <X className="h-3 w-3" />
+                        Reject
+                      </Button>
+                    </>
+                  ) : (
+                    <span className="rounded-full px-2 py-1 text-xs uppercase">
+                      {r.status}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </TabsContent>
+
+        {/* PROJECTS */}
+        <TabsContent
+          value="projects"
+          className="mt-4 space-y-3"
+        >
+          {projects.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No projects yet.
+            </p>
+          )}
+
+          {projects.map((p) => (
+            <div
+              key={p.id}
+              className="rounded-xl border border-border bg-card p-4"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="font-medium">
+                    {p.name}
+                  </div>
+
+                  <div className="text-xs text-muted-foreground">
+                    {p.industry ?? "—"} ·{" "}
+                    {new Date(
+                      p.created_at
+                    ).toLocaleString()}
+                  </div>
+
+                  {p.public_summary && (
+                    <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                      {p.public_summary}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/project/$id"
+                    params={{ id: p.id }}
+                  >
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() =>
-                        signedUrl(
-                          r.screenshot_path
-                        )
-                      }
-                      className="w-full gap-1 sm:w-auto"
+                      className="gap-1"
                     >
-                      <ImageIcon className="h-3 w-3" />
-                      View proof
+                      <ExternalLink className="h-3 w-3" />
+                      Open
                     </Button>
+                  </Link>
 
-                    {r.status === "pending" ? (
-                      <>
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            decidePremium(
-                              r,
-                              true
-                            )
-                          }
-                          disabled={
-                            busy === r.id
-                          }
-                          className="w-full gap-1 sm:w-auto"
-                        >
-                          {busy === r.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Check className="h-3 w-3" />
-                          )}
-
-                          Approve
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() =>
-                            decidePremium(
-                              r,
-                              false
-                            )
-                          }
-                          disabled={
-                            busy === r.id
-                          }
-                          className="w-full gap-1 sm:w-auto"
-                        >
-                          <X className="h-3 w-3" />
-                          Reject
-                        </Button>
-                      </>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full px-2 py-1 text-xs uppercase">
-                        {r.status}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </TabsContent>
-
-          {/* ==================================================
-              PROJECTS
-          ================================================== */}
-
-          <TabsContent
-            value="projects"
-            className="mt-4 space-y-3"
-          >
-            {projects.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                No projects yet.
-              </p>
-            )}
-
-            {projects.map((p) => (
-              <div
-                key={p.id}
-                className="w-full min-w-0 rounded-xl border border-border bg-card p-3 sm:p-4"
-              >
-                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
-                  {/* PROJECT DETAILS */}
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-medium">
-                      {p.name}
-                    </div>
-
-                    <div className="text-xs text-muted-foreground">
-                      {p.industry ?? "—"} ·{" "}
-                      {new Date(
-                        p.created_at
-                      ).toLocaleString()}
-                    </div>
-
-                    {p.public_summary && (
-                      <p className="mt-1 line-clamp-2 break-words text-sm text-muted-foreground">
-                        {p.public_summary}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* ACTIONS */}
-                  <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-row">
-                    <Link
-                      to="/project/$id"
-                      params={{ id: p.id }}
-                      className="w-full sm:w-auto"
-                    >
+                  {p.status === "pending" ? (
+                    <>
                       <Button
-                        variant="outline"
                         size="sm"
-                        className="w-full gap-1 sm:w-auto"
+                        onClick={() =>
+                          decideProject(
+                            p,
+                            "approved"
+                          )
+                        }
+                        disabled={busy === p.id}
+                        className="gap-1"
                       >
-                        <ExternalLink className="h-3 w-3" />
-                        Open
+                        <Check className="h-3 w-3" />
+                        Approve
                       </Button>
-                    </Link>
 
-                    {p.status === "pending" ? (
-                      <>
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            decideProject(
-                              p,
-                              "approved"
-                            )
-                          }
-                          disabled={
-                            busy === p.id
-                          }
-                          className="w-full gap-1 sm:w-auto"
-                        >
-                          {busy === p.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Check className="h-3 w-3" />
-                          )}
-
-                          Approve
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() =>
-                            decideProject(
-                              p,
-                              "rejected"
-                            )
-                          }
-                          disabled={
-                            busy === p.id
-                          }
-                          className="w-full gap-1 sm:w-auto"
-                        >
-                          <X className="h-3 w-3" />
-                          Reject
-                        </Button>
-                      </>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full px-2 py-1 text-xs uppercase">
-                        {p.status}
-                      </span>
-                    )}
-                  </div>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() =>
+                          decideProject(
+                            p,
+                            "rejected"
+                          )
+                        }
+                        disabled={busy === p.id}
+                        className="gap-1"
+                      >
+                        <X className="h-3 w-3" />
+                        Reject
+                      </Button>
+                    </>
+                  ) : (
+                    <span className="rounded-full px-2 py-1 text-xs uppercase">
+                      {p.status}
+                    </span>
+                  )}
                 </div>
               </div>
-            ))}
-          </TabsContent>
-        </Tabs>
-      </div>
+            </div>
+          ))}
+        </TabsContent>
+      </Tabs>
     </DashboardShell>
   );
 }
