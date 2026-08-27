@@ -21,11 +21,13 @@ export interface SessionUser {
   role: Role;
   approvalStatus: "pending" | "approved" | "rejected";
 }
-
 export function dashboardPathFor(role: Role): string {
   switch (role) {
-    case "innovator":
-      return "/innovator";
+    case "founder":
+      return "/founder/approvals";
+
+    case "admin":
+      return "/admin";
 
     case "developer":
       return "/developer";
@@ -33,14 +35,12 @@ export function dashboardPathFor(role: Role): string {
     case "investor":
       return "/investor";
 
-    case "admin":
-    case "founder":
-      return "/admin";
-
+    case "innovator":
     default:
       return "/innovator";
   }
 }
+
 
 async function loadUser(
   userId: string,
@@ -131,26 +131,19 @@ export function useAuth(options?: {
       setUser(u);
       setLoading(false);
 
-      const isFounder =
-        u.role === "founder" ||
-        FOUNDER_EMAILS.includes(
-          u.email.trim().toLowerCase()
-        );
+     const isFounder = FOUNDER_EMAILS.includes(
+  u.email.trim().toLowerCase()
+);
 
-      // Founder always goes directly to founder/admin area.
-      if (isFounder) {
-        if (
-          options?.requireRole &&
-          options.requireRole !== "founder" &&
-          options.requireRole !== "admin"
-        ) {
-          navigate({
-            to: dashboardPathFor("founder"),
-          });
-        }
+if (isFounder) {
+  if (window.location.pathname === "/auth") {
+    navigate({
+      to: "/founder/approvals",
+    });
+  }
 
-        return;
-      }
+  return;
+}
 
       // Normal users must be approved.
       if (u.approvalStatus !== "approved") {
