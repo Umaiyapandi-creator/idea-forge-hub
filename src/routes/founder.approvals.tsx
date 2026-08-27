@@ -303,7 +303,7 @@ function Page() {
       }
     >
       <Tabs defaultValue="users">
-        <TabsList>
+        <TabsList className="w-full overflow-x-auto justify-start">
           <TabsTrigger value="users">
             <Users className="mr-1 h-4 w-4" />
             Users ({pendingUsers.length})
@@ -334,7 +334,7 @@ function Page() {
               key={u.id}
               className="rounded-xl border border-border bg-card p-4"
             >
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="font-medium">
                     {u.full_name || "Unnamed user"}
@@ -352,7 +352,7 @@ function Page() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex w-full gap-2 sm:w-auto">
                   {u.approval_status === "pending" ? (
                     <>
                       <Button
