@@ -62,25 +62,74 @@ function AuthPage() {
   const [showPw, setShowPw] = useState(false);
 
   // Auto-redirect if already logged in
-  useEffect(() => {
-    let mounted = true;
-    const { data: roles, error } = await supabase
-  .from("user_roles")
-  .select("role")
-  .eq("user_id", userId);
+  // Auto-redirect if already logged in
+useEffect(() => {
+  let mounted = true;
 
-console.log("ROLE DATA:", roles);
-console.log("ROLE ERROR:", error);
-      if (mounted) navigate({ to: dashboardPathFor(r) });
-    };
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) route(session.user.id);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) route(session.user.id);
-    });
-    return () => { mounted = false; subscription.unsubscribe(); };
-  }, [navigate]);
+  const route = async (userId: string, userEmail?: string) => {
+    const { data: roles, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+
+    if (!mounted) return;
+
+    console.log("ROLE DATA:", roles);
+    console.log("ROLE ERROR:", error);
+
+    const emailLc = (userEmail ?? "").trim().toLowerCase();
+
+    // Founder emails always go to Founder/Admin area
+    const isFounder = FOUNDER_EMAILS.includes(emailLc);
+
+    const rolesList = (roles ?? []).map(
+      (r) => r.role as Role
+    );
+
+    const r: Role =
+      isFounder
+        ? "founder"
+        : rolesList.includes("admin")
+          ? "admin"
+          : (rolesList[0] ?? "innovator");
+
+    console.log("AUTH EMAIL:", emailLc);
+    console.log("FINAL ROLE:", r);
+
+    if (mounted) {
+      navigate({
+        to: dashboardPathFor(r),
+      });
+    }
+  };
+
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session) {
+      route(
+        session.user.id,
+        session.user.email
+      );
+    }
+  });
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange(
+    (_event, session) => {
+      if (session) {
+        route(
+          session.user.id,
+          session.user.email
+        );
+      }
+    }
+  );
+
+  return () => {
+    mounted = false;
+    subscription.unsubscribe();
+  };
+}, [navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
