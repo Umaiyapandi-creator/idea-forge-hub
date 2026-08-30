@@ -63,6 +63,7 @@ function AuthPage() {
 
   // Auto-redirect if already logged in
   // Auto-redirect if already logged in
+// Auto-redirect if already logged in
 useEffect(() => {
   let mounted = true;
 
@@ -79,7 +80,6 @@ useEffect(() => {
 
     const emailLc = (userEmail ?? "").trim().toLowerCase();
 
-    // Founder emails always go to Founder/Admin area
     const isFounder = FOUNDER_EMAILS.includes(emailLc);
 
     const rolesList = (roles ?? []).map(
@@ -96,19 +96,14 @@ useEffect(() => {
     console.log("AUTH EMAIL:", emailLc);
     console.log("FINAL ROLE:", r);
 
-    if (mounted) {
-      navigate({
-        to: dashboardPathFor(r),
-      });
-    }
+    navigate({
+      to: dashboardPathFor(r),
+    });
   };
 
   supabase.auth.getSession().then(({ data: { session } }) => {
     if (session) {
-      route(
-        session.user.id,
-        session.user.email
-      );
+      route(session.user.id, session.user.email);
     }
   });
 
@@ -117,10 +112,7 @@ useEffect(() => {
   } = supabase.auth.onAuthStateChange(
     (_event, session) => {
       if (session) {
-        route(
-          session.user.id,
-          session.user.email
-        );
+        route(session.user.id, session.user.email);
       }
     }
   );
