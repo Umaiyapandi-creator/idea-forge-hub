@@ -66,40 +66,62 @@ function AuthPage() {
 useEffect(() => {
   let mounted = true;
 
-  const route = async (userId: string, userEmail?: string) => {
-    const { data: roles, error } = await supabase
+ const route = async (userId: string, userEmail?: string) => {
+  const [
+    { data: roles, error: rolesError },
+    { data: profile, error: profileError },
+  ] = await Promise.all([
+    supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId);
+      .eq("user_id", userId),
 
-    if (!mounted) return;
+    supabase
+      .from("profiles")
+      .select("approval_status")
+      .eq("id", userId)
+      .maybeSingle(),
+  ]);
 
-    console.log("ROLE DATA:", roles);
-    console.log("ROLE ERROR:", error);
+  if (!mounted) return;
 
-    const emailLc = (userEmail ?? "").trim().toLowerCase();
+  console.log("ROLE DATA:", roles);
+  console.log("ROLE ERROR:", rolesError);
+  console.log("PROFILE:", profile);
+  console.log("PROFILE ERROR:", profileError);
 
-    const isFounder = FOUNDER_EMAILS.includes(emailLc);
+  const emailLc = (userEmail ?? "").trim().toLowerCase();
 
-    const rolesList = (roles ?? []).map(
-      (r) => r.role as Role
-    );
+  // Founder emails always go directly to admin/founder area
+  const isFounder = FOUNDER_EMAILS.includes(emailLc);
 
-    const r: Role =
-      isFounder
-        ? "founder"
-        : rolesList.includes("admin")
-          ? "admin"
-          : (rolesList[0] ?? "innovator");
+  if (isFounder) {
+    navigate({ to: "/admin" });
+    return;
+  }
 
-    console.log("AUTH EMAIL:", emailLc);
-    console.log("FINAL ROLE:", r);
+  // New users wait for Founder approval
+  if (profile?.approval_status !== "approved") {
+    navigate({ to: "/pending" });
+    return;
+  }
 
-    navigate({
-      to: dashboardPathFor(r),
-    });
-  };
+  const rolesList = (roles ?? []).map(
+    (r) => r.role as Role
+  );
 
+  const r: Role =
+    rolesList.includes("admin")
+      ? "admin"
+      : (rolesList[0] ?? "innovator");
+
+  console.log("AUTH EMAIL:", emailLc);
+  console.log("FINAL ROLE:", r);
+
+  navigate({
+    to: dashboardPathFor(r),
+  });
+};
   supabase.auth.getSession().then(({ data: { session } }) => {
     if (session) {
       route(session.user.id, session.user.email);
@@ -187,8 +209,10 @@ console.log("SIGNUP ERROR:", error);
 if (error) {
   throw new Error(`Signup failed: ${error.message}`);
 }
+toast.success("Account created. Waiting for Founder approval.");
 
-toast.success("Account created. Please check your email for confirmation.");
+await navigate({ to: "/pending" });
+
         }
          else {
           const { error } = await supabase.auth.signInWithPassword({
