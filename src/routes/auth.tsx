@@ -61,8 +61,7 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [showPw, setShowPw] = useState(false);
 
-  // Auto-redirect if already logged in
-  // Auto-redirect if already logged in
+
 // Auto-redirect if already logged in
 useEffect(() => {
   let mounted = true;
