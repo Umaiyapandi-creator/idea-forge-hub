@@ -223,37 +223,57 @@ export function Dashboard() {
     </button>
   );
 
-  const SidebarBody = (
-    <div className="flex h-full flex-col gap-4 p-4">
-      <div className="rounded-xl border border-border bg-card p-4 text-center">
-        <div className="mx-auto h-16 w-16">
-          <AvatarCircle size={64} />
-        </div>
-        <div className="mt-2 font-semibold">{user.name}</div>
-        <div className="text-xs text-muted-foreground">{industry || "Industry not set"}</div>
+ const SidebarBody = (
+  <div className="flex h-full flex-col gap-4 p-4">
+
+    <div className="rounded-xl border border-border bg-card p-4 text-center">
+      <div className="mx-auto h-16 w-16">
+        <AvatarCircle size={64} />
       </div>
-      <nav className="flex flex-col gap-1">
-        {navItems.map((n) => {
-          const Icon = n.icon;
-          const active = section === n.id;
-          return (
-            <button
-              key={n.id}
-              onClick={() => { setSection(n.id); setMenuOpen(false); }}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
-                active ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"
-              }`}
-            >
-              <Icon className="h-4 w-4" /> {n.label}
-            </button>
-          );
-        })}
-      </nav>
-      <Button variant="outline" className="mt-auto gap-2" onClick={logout}>
-        <LogOut className="h-4 w-4" /> Log out
-      </Button>
+
+      <div className="mt-2 font-semibold">{user.name}</div>
+      <div className="text-xs text-muted-foreground">
+        {industry || "Industry not set"}
+      </div>
     </div>
-  );
+
+    <nav className="flex flex-col gap-1">
+      {navItems.map((n) => {
+        const Icon = n.icon;
+        const active = section === n.id;
+
+        return (
+          <button
+            key={n.id}
+            onClick={() => {
+              setSection(n.id);
+              setMenuOpen(false);
+            }}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
+              active
+                ? "bg-primary text-primary-foreground"
+                : "text-foreground hover:bg-muted"
+            }`}
+          >
+            <Icon className="h-4 w-4" />
+            {n.label}
+          </button>
+        );
+      })}
+    </nav>
+
+    {/* Logout - Contact கீழே */}
+    <Button
+      variant="outline"
+      className="gap-2"
+      onClick={logout}
+    >
+      <LogOut className="h-4 w-4" />
+      Log out
+    </Button>
+
+  </div>
+);
 
   return (
     <div className="min-h-screen bg-muted/30">
