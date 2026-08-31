@@ -41,30 +41,12 @@ const DIRECTORS = [
   },
 ];
 
-const FOUNDERS = [
-  {
-    name: "K. EsakkiMuthu",
-    roll: "Founder",
-    img: "/certs/esakkimuthu.jpeg",
-  },
-  {
-    name: "L. Mareeswaran",
-    roll: "Co-Founder",
-    img: "/certs/mareeswaran.jpeg",
-  },
-];
 
 
 
 const APPLY_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc91HEo9eq0iPOU3t9RtKxksarjovfJVdGGai1dMC2z92kvEA/viewform?usp=header";
 
-const DIRECTORS = [
-  { name: "L. Karthikeyan", roll: "Board of Director", img: karthikeyanCert.url },
-  { name: "S. Maha Lakshmi", roll: "Board of Director", img: mahaCert.url },
-  { name: "S. Surya", roll: "Board of Director", img: suryaCert.url },
-  { name: "P. Periyanayagam", roll: "Board of Director", img: periyaCert.url },
-  { name: "B. Umaiya Pandi", roll: "Technical Director", img: "/certs/umaiya.jpeg"},
-];
+
 
 const FOUNDERS = [
   {
