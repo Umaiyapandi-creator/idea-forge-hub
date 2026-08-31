@@ -32,7 +32,7 @@ const DIRECTORS = [
 ];
 
 const FOUNDERS = [
-  { name: "K. EsakkiMuthu", roll: "Founder", img: esakkiCert.url },
+  { name: "K. EsakkiMuthu", roll: "Founder", img: "/certs/esakkimuthu.jpeg" },
   { name: "L. Mareeswaran", roll: "Co-Founder", img: mareesCert.url },
 ];
 
