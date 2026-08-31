@@ -19,7 +19,7 @@ import umaiyaCert from "@/assets/certs/umaiya.jpeg.asset.json";
 import mahaCert from "@/assets/certs/mahalakshmi.jpeg.asset.json";
 import periyaCert from "@/assets/certs/periyanayagam.jpeg.asset.json";
 
-import mareesCert from "@/assets/certs/mareeswaran.jpeg.asset.json";
+
 
 const APPLY_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc91HEo9eq0iPOU3t9RtKxksarjovfJVdGGai1dMC2z92kvEA/viewform?usp=header";
 
@@ -40,7 +40,7 @@ const FOUNDERS = [
   {
     name: "L. Mareeswaran",
     roll: "Co-Founder",
-    img: mareesCert.url,
+    img: "/certs/mareeswaran.jpeg",
   },
 ];
 
