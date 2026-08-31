@@ -15,7 +15,7 @@ import { PremiumBadge, FeaturedBadge, PriorityBadge } from "@/components/Premium
 
 import suryaCert from "@/assets/certs/surya.jpeg.asset.json";
 import karthikeyanCert from "@/assets/certs/karthikeyan.jpeg.asset.json";
-import umaiyaCert from "@/assets/certs/umaiya.jpeg.asset.json";
+
 import mahaCert from "@/assets/certs/mahalakshmi.jpeg.asset.json";
 import periyaCert from "@/assets/certs/periyanayagam.jpeg.asset.json";
 
