@@ -13,11 +13,46 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePlan } from "@/lib/premium";
 import { PremiumBadge, FeaturedBadge, PriorityBadge } from "@/components/PremiumBadge";
 
-import suryaCert from "@/assets/certs/surya.jpeg.asset.json";
-import karthikeyanCert from "@/assets/certs/karthikeyan.jpeg.asset.json";
+const DIRECTORS = [
+  {
+    name: "L. Karthikeyan",
+    roll: "Board of Director",
+    img: "/certs/karthikeyan.png",
+  },
+  {
+    name: "S. Maha Lakshmi",
+    roll: "Board of Director",
+    img: "/certs/mahalakshmi.png",
+  },
+  {
+    name: "S. Surya",
+    roll: "Board of Director",
+    img: "/certs/surya.jpeg",
+  },
+  {
+    name: "P. Periyanayagam",
+    roll: "Board of Director",
+    img: "/certs/periyanayagam.jpeg",
+  },
+  {
+    name: "B. Umaiya Pandi",
+    roll: "Technical Director",
+    img: "/certs/umaiya.jpeg",
+  },
+];
 
-import mahaCert from "@/assets/certs/mahalakshmi.jpeg.asset.json";
-import periyaCert from "@/assets/certs/periyanayagam.jpeg.asset.json";
+const FOUNDERS = [
+  {
+    name: "K. EsakkiMuthu",
+    roll: "Founder",
+    img: "/certs/esakkimuthu.jpeg",
+  },
+  {
+    name: "L. Mareeswaran",
+    roll: "Co-Founder",
+    img: "/certs/mareeswaran.jpeg",
+  },
+];
 
 
 
