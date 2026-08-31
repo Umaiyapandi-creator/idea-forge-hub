@@ -28,7 +28,7 @@ const DIRECTORS = [
   { name: "S. Maha Lakshmi", roll: "Board of Director", img: mahaCert.url },
   { name: "S. Surya", roll: "Board of Director", img: suryaCert.url },
   { name: "P. Periyanayagam", roll: "Board of Director", img: periyaCert.url },
-  { name: "B. Umaiya Pandi", roll: "Technical Director", img: umaiyaCert.url },
+  { name: "B. Umaiya Pandi", roll: "Technical Director", img: "/certs/umaiya.jpeg"},
 ];
 
 const FOUNDERS = [
