@@ -72,7 +72,7 @@ async function loadUser(
     (r) => r.role as Role
   );
 
-  const role: Role =
+ const role: Role =
   isFounder
     ? "founder"
     : rolesList.includes("admin")
