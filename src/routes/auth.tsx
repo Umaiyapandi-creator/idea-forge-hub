@@ -190,50 +190,54 @@ useEffect(() => {
           toast.error("Please fill in all fields");
           return;
         }
-        if (tab === "signup") {
-   const selectedRole = role;
+       if (tab === "signup") {
+  const selectedRole = role;
 
-const { data, error } = await supabase.auth.signUp({
-  email: form.email.trim().toLowerCase(),
-  password: form.password,
-  options: {
-    emailRedirectTo: "https://waytodream.sbs/auth",
-    data: {
-      full_name: form.name,
-      role: selectedRole,
+  console.log("SIGNUP SELECTED ROLE:", selectedRole);
+
+  const { data, error } = await supabase.auth.signUp({
+    email: form.email.trim().toLowerCase(),
+    password: form.password,
+    options: {
+      emailRedirectTo: "https://waytodream.sbs/auth",
+      data: {
+        full_name: form.name,
+        role: selectedRole,
+      },
     },
-  },
-});
+  });
 
-console.log("SIGNUP DATA:", data);
-console.log("SIGNUP ERROR:", error);
+  console.log("SIGNUP DATA:", data);
+  console.log("SIGNUP ERROR:", error);
 
-if (error) {
-  throw new Error(`Signup failed: ${error.message}`);
-}
-
-// Save selected role into user_roles
-if (data.user) {
-  const { error: roleError } = await supabase
-    .from("user_roles")
-    .insert({
-      user_id: data.user.id,
-      role: selectedRole,
-    });
-
-  console.log("SELECTED ROLE:", selectedRole);
-  console.log("ROLE INSERT ERROR:", roleError);
-
-  if (roleError) {
-    throw new Error(`Role save failed: ${roleError.message}`);
+  if (error) {
+    throw new Error(`Signup failed: ${error.message}`);
   }
+
+  // Save selected role
+  if (data.user) {
+    console.log("CREATING ROLE:", selectedRole);
+
+    const { error: roleError } = await supabase
+      .from("user_roles")
+      .insert({
+        user_id: data.user.id,
+        role: selectedRole,
+      });
+
+    console.log("ROLE INSERT ERROR:", roleError);
+
+    if (roleError) {
+      throw new Error(`Role save failed: ${roleError.message}`);
+    }
+
+    console.log("ROLE SAVED SUCCESSFULLY:", selectedRole);
+  }
+
+  toast.success("Account created. Waiting for Founder approval.");
+
+  await navigate({ to: "/pending" });
 }
-
-toast.success("Account created. Waiting for Founder approval.");
-
-await navigate({ to: "/pending" });
-
-        }
          else {
           const { error } = await supabase.auth.signInWithPassword({
             email: form.email,
