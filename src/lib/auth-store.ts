@@ -49,7 +49,7 @@ async function loadUser(
   const [{ data: profile }, { data: roles }] = await Promise.all([
     supabase
      .from("profiles")
-     .select("full_name, email, role, approval_status")
+     .select("full_name, email, approval_status")
      .eq("id", userId)
      .maybeSingle(),
 
