@@ -191,14 +191,14 @@ useEffect(() => {
           return;
         }
         if (tab === "signup") {
-        const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
   email: form.email.trim().toLowerCase(),
   password: form.password,
   options: {
     emailRedirectTo: "https://waytodream.sbs/auth",
     data: {
       full_name: form.name,
-      role : role,
+      role: role,
     },
   },
 });
@@ -209,6 +209,26 @@ console.log("SIGNUP ERROR:", error);
 if (error) {
   throw new Error(`Signup failed: ${error.message}`);
 }
+
+if (!data.user) {
+  throw new Error("User was created but user ID was not returned.");
+}
+
+// Save selected role into user_roles table
+const { error: roleError } = await supabase
+  .from("user_roles")
+  .insert({
+    user_id: data.user.id,
+    role: role,
+  });
+
+if (roleError) {
+  console.error("ROLE INSERT ERROR:", roleError);
+  throw new Error(`Role setup failed: ${roleError.message}`);
+}
+
+console.log("ROLE SAVED:", role);
+
 toast.success("Account created. Waiting for Founder approval.");
 
 await navigate({ to: "/pending" });
