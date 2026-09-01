@@ -73,15 +73,21 @@ async function loadUser(
   );
 
   const role: Role =
-    isFounder
-      ? "founder"
-      : rolesList.includes("admin")
-        ? "admin"
-        : (rolesList[0] ?? "innovator");
+  isFounder
+    ? "founder"
+    : rolesList.includes("admin")
+      ? "admin"
+      : rolesList.includes("developer")
+        ? "developer"
+        : rolesList.includes("investor")
+          ? "investor"
+          : rolesList.includes("innovator")
+            ? "innovator"
+            : "innovator";
 
-  console.log("AUTH EMAIL:", userEmail);
-  console.log("DATABASE ROLES:", rolesList);
-  console.log("FINAL ROLE:", role);
+console.log("AUTH EMAIL:", userEmail);
+console.log("DATABASE ROLES:", rolesList);
+console.log("FINAL ROLE:", role);
 
   return {
   id: userId,
