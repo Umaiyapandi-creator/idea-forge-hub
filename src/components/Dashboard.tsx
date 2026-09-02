@@ -130,10 +130,13 @@ export function Dashboard() {
 
       const { data, error } = await query;
 
-      if (error) {
-        console.error("PROJECT FETCH ERROR:", error);
-        throw error;
-      }
+   console.log("DEVELOPER PROJECT DATA:", data);
+   console.log("DEVELOPER PROJECT ERROR:", error);
+
+if (error) {
+  console.error("PROJECT FETCH ERROR:", error);
+  throw error;
+}
 
       const formattedProjects: ProjectRow[] = (data ?? []).map((p) => ({
         id: p.id,
@@ -592,7 +595,7 @@ function Leaderboard() {
   const load = async () => {
     setLoading(true);
     const { data: projects } = await supabase
-      .from("projects")
+      .from("data")
       .select("id,name,owner_id,ai_analysis")
       .not("ai_analysis", "is", null);
     const list = (projects ?? []) as Array<{ id: string; name: string; owner_id: string; ai_analysis: { market_potential?: number; innovation?: number; startup_readiness?: number } | null }>;
@@ -645,7 +648,7 @@ function Leaderboard() {
     load();
     const channel = supabase
       .channel("leaderboard-projects")
-      .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "data" }, () => load())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
