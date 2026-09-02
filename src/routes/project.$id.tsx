@@ -36,7 +36,8 @@ function Page() {
   const load = async () => {
     setLoading(true);
     const { data } = await supabase.from("data")
-      .select("id,name,owner_id,industry,funding_needed,problem,solution,public_summary,status,is_priority,is_featured,ai_analysis")
+      .select(
+  "id,name,owner_id,industry,funding_needed,problem,solution,public_summary,status,is_priority")
       .eq("id", id).maybeSingle();
     setProject(data as ProjectRow | null);
     setLoading(false);
