@@ -35,7 +35,7 @@ function Page() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("projects")
+    const { data } = await supabase.from("data")
       .select("id,name,owner_id,industry,funding_needed,problem,solution,public_summary,status,is_priority,is_featured,ai_analysis")
       .eq("id", id).maybeSingle();
     setProject(data as ProjectRow | null);
@@ -51,7 +51,7 @@ function Page() {
   const togglePromote = async () => {
     if (!isPremium) { toast.error("Upgrade to Premium to Promote Your Project."); return; }
     setPromoting(true);
-    const { error } = await supabase.from("projects").update({ is_featured: !project.is_featured }).eq("id", project.id);
+    const { error } = await supabase.from("data").update({ is_featured: !project.is_featured }).eq("id", project.id);
     setPromoting(false);
     if (error) { toast.error(error.message); return; }
     toast.success(project.is_featured ? "Removed from Featured" : "Project promoted to Featured");
