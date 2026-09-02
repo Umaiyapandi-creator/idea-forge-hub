@@ -79,6 +79,7 @@ type ProjectRow = {
   owner_id: string;
   is_priority: boolean;
   is_featured: boolean;
+  created_at: string;
 };
 
 export function Dashboard() {
@@ -108,17 +109,60 @@ export function Dashboard() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!user || section !== "projects") return;
+  if (!user || section !== "projects") return;
+
+  const loadProjects = async () => {
     setProjectsLoading(true);
-    const cols = "id,name,industry,funding_needed,status,owner_id,is_priority,is_featured";
-    const q = user.role === "innovator"
-      ? supabase.from("projects").select(cols).eq("owner_id", user.id).order("is_priority", { ascending: false }).order("created_at", { ascending: false })
-      : supabase.from("projects").select(cols).order("is_priority", { ascending: false }).order("is_featured", { ascending: false }).order("created_at", { ascending: false });
-    q.then(({ data }) => {
-      setProjects((data ?? []) as ProjectRow[]);
+
+    try {
+      let query = supabase
+        .from("data")
+        .select(
+          "id,name,industry,funding_needed,status,owner_id,is_priority,created_at"
+        )
+        .order("is_priority", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      // Innovator → only their own projects
+      if (user.role === "innovator") {
+        query = query.eq("owner_id", user.id);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("PROJECT FETCH ERROR:", error);
+        throw error;
+      }
+
+      const formattedProjects: ProjectRow[] = (data ?? []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        industry: p.industry,
+        funding_needed: p.funding_needed,
+        status: p.status,
+        owner_id: p.owner_id,
+        is_priority: p.is_priority ?? false,
+        is_featured: false,
+        created_at: p.created_at,
+      }));
+
+      setProjects(formattedProjects);
+    } catch (error) {
+      console.error("LOAD PROJECTS ERROR:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to load projects"
+      );
+      setProjects([]);
+    } finally {
       setProjectsLoading(false);
-    });
-  }, [user, section]);
+    }
+  };
+
+  loadProjects();
+}, [user, section]);
 
   useEffect(() => {
     if (!user) return;
