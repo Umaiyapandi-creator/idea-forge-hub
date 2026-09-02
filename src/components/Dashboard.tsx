@@ -491,6 +491,79 @@ const updateAccessRequest = async (
                 <Link to="/project/new"><Button className="gap-2"><Plus className="h-4 w-4" /> Upload new idea</Button></Link>
               )}
             </div>
+            {user.role === "innovator" && (
+  <section className="mb-6 rounded-xl border border-border bg-card p-5 shadow-sm">
+    <div className="mb-4">
+      <h3 className="text-lg font-semibold">
+        Developer Access Requests
+      </h3>
+
+      <p className="text-sm text-muted-foreground">
+        Review developers requesting access to your projects.
+      </p>
+    </div>
+
+    {requestsLoading ? (
+      <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading requests...
+      </div>
+    ) : accessRequests.length === 0 ? (
+      <div className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
+        No developer access requests yet.
+      </div>
+    ) : (
+      <div className="space-y-3">
+        {accessRequests.map((request) => (
+          <div
+            key={request.id}
+            className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <div className="font-medium">
+                {request.data?.name ?? "Project"}
+              </div>
+
+              <div className="mt-1 text-xs text-muted-foreground">
+                Developer ID: {request.developer_id}
+              </div>
+
+              <div className="mt-1 text-xs">
+                Status:{" "}
+                <span className="font-semibold capitalize">
+                  {request.status}
+                </span>
+              </div>
+            </div>
+
+            {request.status === "pending" && (
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    updateAccessRequest(request.id, "approved")
+                  }
+                >
+                  Approve
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() =>
+                    updateAccessRequest(request.id, "rejected")
+                  }
+                >
+                  Reject
+                </Button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
+  </section>
+)}
             {projectsLoading ? (
               <div className="grid place-items-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
             ) : projects.length === 0 ? (
