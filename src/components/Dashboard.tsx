@@ -108,6 +108,9 @@ export function Dashboard() {
   const [projectsLoading, setProjectsLoading] = useState(false);
   const [accessRequests, setAccessRequests] = useState<any[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
+  const [myAccessRequests, setMyAccessRequests] = useState<
+  Record<string, string>
+>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -167,6 +170,31 @@ if (error) {
   };
 
   loadProjects();
+}, [user, section]);
+  useEffect(() => {
+  if (!user || user.role !== "developer" || section !== "projects") return;
+
+  const loadMyAccessRequests = async () => {
+    const { data, error } = await supabase
+      .from("project_access_requests")
+      .select("project_id, status")
+      .eq("developer_id", user.id);
+
+    if (error) {
+      console.error("MY ACCESS REQUESTS ERROR:", error);
+      return;
+    }
+
+    const statusMap: Record<string, string> = {};
+
+    (data ?? []).forEach((request) => {
+      statusMap[String(request.project_id)] = request.status;
+    });
+
+    setMyAccessRequests(statusMap);
+  };
+
+  loadMyAccessRequests();
 }, [user, section]);
 useEffect(() => {
   if (!user || user.role !== "innovator" || section !== "projects") return;
@@ -618,32 +646,52 @@ const updateAccessRequest = async (
 
     <div className="mt-4">
       {user.role === "developer" ? (
-        <Button
-          size="sm"
-          onClick={async () => {
-            const { error } = await supabase
-              .from("project_access_requests")
-              .insert({
-                project_id: p.id,
-                developer_id: user.id,
-              });
+  myAccessRequests[String(p.id)] === "approved" ? (
+    <Link
+      to="/project/$id"
+      params={{ id: p.id }}
+      className="inline-flex items-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+    >
+      <FileText className="mr-2 h-4 w-4" />
+      Open Workspace
+    </Link>
+  ) : myAccessRequests[String(p.id)] === "pending" ? (
+    <Button size="sm" variant="secondary" disabled>
+      Request Pending
+    </Button>
+  ) : myAccessRequests[String(p.id)] === "rejected" ? (
+    <Button size="sm" variant="destructive" disabled>
+      Request Rejected
+    </Button>
+  ) : (
+    <Button
+      size="sm"
+      onClick={async () => {
+        const { error } = await supabase
+          .from("project_access_requests")
+          .insert({
+            project_id: p.id,
+            developer_id: user.id,
+          });
 
-            if (error) {
-              if (error.code === "23505") {
-                toast.error("You already requested access");
-              } else {
-                console.error("ACCESS REQUEST ERROR:", error);
-                toast.error(error.message);
-              }
-              return;
-            }
+        if (error) {
+          console.error("ACCESS REQUEST ERROR:", error);
+          toast.error(error.message);
+          return;
+        }
 
-            toast.success("Access request sent successfully!");
-          }}
-        >
-          Request Access
-        </Button>
-      ) : (
+        setMyAccessRequests((current) => ({
+          ...current,
+          [String(p.id)]: "pending",
+        }));
+
+        toast.success("Access request sent successfully!");
+      }}
+    >
+      Request Access
+    </Button>
+  )
+) : (
         <Link
           to="/project/$id"
           params={{ id: p.id }}
