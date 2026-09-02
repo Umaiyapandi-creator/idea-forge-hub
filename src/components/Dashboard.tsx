@@ -12,7 +12,7 @@ import { signOut, useAuth } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlan } from "@/lib/premium";
 import { PremiumBadge, FeaturedBadge, PriorityBadge } from "@/components/PremiumBadge";
-
+F
 const DIRECTORS = [
   {
     name: "L. Karthikeyan",
@@ -106,6 +106,8 @@ export function Dashboard() {
   const [viewer, setViewer] = useState<{ src: string; name: string } | null>(null);
   const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
+  const [accessRequests, setAccessRequests] = useState<any[]>([]);
+  const [requestsLoading, setRequestsLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -166,7 +168,45 @@ if (error) {
 
   loadProjects();
 }, [user, section]);
+useEffect(() => {
+  if (!user || user.role !== "innovator" || section !== "projects") return;
 
+  const loadAccessRequests = async () => {
+    setRequestsLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("project_access_requests")
+        .select(`
+          id,
+          project_id,
+          developer_id,
+          status,
+          created_at,
+          data:project_id (
+            id,
+            name
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setAccessRequests(data ?? []);
+    } catch (error) {
+      console.error("ACCESS REQUEST LOAD ERROR:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to load access requests"
+      );
+    } finally {
+      setRequestsLoading(false);
+    }
+  };
+
+  loadAccessRequests();
+}, [user, section]);
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("industry, avatar_url").eq("id", user.id).maybeSingle()
@@ -219,7 +259,35 @@ if (error) {
       setUploadingAvatar(false);
     }
   };
+const updateAccessRequest = async (
+  requestId: number,
+  status: "approved" | "rejected"
+) => {
+  const { error } = await supabase
+    .from("project_access_requests")
+    .update({ status })
+    .eq("id", requestId);
 
+  if (error) {
+    console.error("ACCESS REQUEST UPDATE ERROR:", error);
+    toast.error(error.message);
+    return;
+  }
+
+  setAccessRequests((current) =>
+    current.map((request) =>
+      request.id === requestId
+        ? { ...request, status }
+        : request
+    )
+  );
+
+  toast.success(
+    status === "approved"
+      ? "Developer access approved!"
+      : "Developer access rejected."
+  );
+};
   const submitFeedback = async () => {
     if (!feedback.trim() || !user) return;
     setSubmitting(true);
