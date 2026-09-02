@@ -12,7 +12,7 @@ import { signOut, useAuth } from "@/lib/auth-store";
 import { supabase } from "@/integrations/supabase/client";
 import { usePlan } from "@/lib/premium";
 import { PremiumBadge, FeaturedBadge, PriorityBadge } from "@/components/PremiumBadge";
-F
+
 const DIRECTORS = [
   {
     name: "L. Karthikeyan",
