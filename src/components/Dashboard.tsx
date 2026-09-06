@@ -172,7 +172,9 @@ if (error) {
   loadProjects();
 }, [user, section]);
   useEffect(() => {
-  if (!user || user.role !== "developer" || section !== "projects") return;
+  if (!user || user.role !== "developer" || section !== "projects") {
+    return;
+  }
 
   const loadMyAccessRequests = async () => {
     const { data, error } = await supabase
@@ -191,10 +193,22 @@ if (error) {
       statusMap[String(request.project_id)] = request.status;
     });
 
+    console.log("MY ACCESS STATUS:", statusMap);
+
     setMyAccessRequests(statusMap);
   };
 
+  // Load immediately
   loadMyAccessRequests();
+
+  // Check again every 3 seconds
+  const interval = setInterval(() => {
+    loadMyAccessRequests();
+  }, 3000);
+
+  return () => {
+    clearInterval(interval);
+  };
 }, [user, section]);
 useEffect(() => {
   if (!user || user.role !== "innovator" || section !== "projects") return;
