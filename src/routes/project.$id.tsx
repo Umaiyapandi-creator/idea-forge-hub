@@ -18,10 +18,19 @@ export const Route = createFileRoute("/project/$id")({
 });
 
 type ProjectRow = {
-  id: string; name: string; owner_id: string; industry: string | null;
-  funding_needed: string | null; problem: string; solution: string | null;
-  public_summary: string | null; status: string;
-  is_priority: boolean; is_featured: boolean;
+  id: string;
+  name: string;
+  owner_id: string;
+  industry: string | null;
+  funding_needed: string | null;
+  problem: string;
+  solution: string | null;
+  public_summary: string | null;
+  status: string;
+  is_priority: boolean;
+  is_featured: boolean;
+  ppt_path: string | null;
+  pdf_path: string | null;
   ai_analysis: AiAnalysis | null;
 };
 
@@ -33,6 +42,13 @@ function Page() {
   const [loading, setLoading] = useState(true);
   const [hasDocumentAccess, setHasDocumentAccess] = useState(false);
   const [promoting, setPromoting] = useState(false);
+  const [accessStatus, setAccessStatus] = useState<
+  "pending" | "approved" | "rejected" | null
+>(null);
+
+const [pptUrl, setPptUrl] = useState<string | null>(null);
+const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+const [documentsLoading, setDocumentsLoading] = useState(false);
 const load = async () => {
   setLoading(true);
 
@@ -93,6 +109,46 @@ const load = async () => {
   setLoading(false);
 };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  useEffect(() => {
+  if (!user || !id) return;
+
+  const loadAccess = async () => {
+    setDocumentsLoading(true);
+
+    try {
+      // Project owner always has access
+      if (user.id === project?.owner_id) {
+        setAccessStatus("approved");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("project_access_requests")
+        .select("status")
+        .eq("project_id", id)
+        .eq("developer_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("ACCESS STATUS ERROR:", error);
+        setAccessStatus(null);
+        return;
+      }
+
+      setAccessStatus(
+        data?.status === "approved" ||
+        data?.status === "pending" ||
+        data?.status === "rejected"
+          ? data.status
+          : null
+      );
+    } finally {
+      setDocumentsLoading(false);
+    }
+  };
+
+  loadAccess();
+}, [user, id, project?.owner_id]);
 
   if (loading) return <div className="grid min-h-screen place-items-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (!project) return <DashboardShell title="Not found"><p className="text-sm text-muted-foreground">Project not found.</p></DashboardShell>;
@@ -174,72 +230,145 @@ const load = async () => {
   value="docs"
   className="mt-6 rounded-xl border border-border bg-card p-6"
 >
-  {hasDocumentAccess ? (
-    <div className="space-y-4">
-      <h3 className="font-semibold">Project Documents</h3>
+  {documentsLoading ? (
+    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <Loader2 className="h-4 w-4 animate-spin" />
+      Checking document access...
+    </div>
+  ) : accessStatus === "approved" ? (
+    <div className="space-y-5">
+      <div>
+        <h3 className="text-lg font-semibold">Project Documents</h3>
+        <p className="text-sm text-muted-foreground">
+          You have approved access to the NDA-protected documents.
+        </p>
+      </div>
 
-      <p className="text-sm text-muted-foreground">
-        You have access to the project documents.
-      </p>
-
-      <div className="flex gap-3">
-        {project.ppt_path && (
-          <Button
-            onClick={() => toast.info("Opening PPT...")}
-          >
-            View PPT
-          </Button>
-        )}
+      <div className="grid gap-4 sm:grid-cols-2">
 
         {project.pdf_path && (
-          <Button
-            onClick={() => toast.info("Opening PDF...")}
-          >
-            View PDF
-          </Button>
+          <DocumentCard
+            title="Project PDF"
+            type="PDF"
+            path={project.pdf_path}
+            onUrl={setPdfUrl}
+          />
         )}
+
+        {project.ppt_path && (
+          <DocumentCard
+            title="Project PPT"
+            type="PPT"
+            path={project.ppt_path}
+            onUrl={setPptUrl}
+          />
+        )}
+
+      </div>
+
+      {!project.pdf_path && !project.ppt_path && (
+        <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+          No project documents uploaded yet.
+        </div>
+      )}
+
+      {pdfUrl && (
+        <div className="mt-6">
+          <h3 className="mb-3 font-semibold">PDF Preview</h3>
+
+          <iframe
+            src={pdfUrl}
+            title="Project PDF"
+            className="h-[700px] w-full rounded-lg border"
+          />
+        </div>
+      )}
+
+      {pptUrl && (
+        <div className="mt-4">
+          <Button asChild variant="outline">
+            <a
+              href={pptUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open PPT
+            </a>
+          </Button>
+        </div>
+      )}
+    </div>
+  ) : accessStatus === "pending" ? (
+    <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-5">
+      <div className="flex items-center gap-3">
+        <Lock className="h-5 w-5" />
+        <div>
+          <h3 className="font-semibold">Access Request Pending</h3>
+          <p className="text-sm text-muted-foreground">
+            The project owner has not approved your request yet.
+          </p>
+        </div>
+      </div>
+    </div>
+  ) : accessStatus === "rejected" ? (
+    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-5">
+      <div className="flex items-center gap-3">
+        <Lock className="h-5 w-5" />
+        <div>
+          <h3 className="font-semibold">Access Rejected</h3>
+          <p className="text-sm text-muted-foreground">
+            Your request to access these documents was rejected.
+          </p>
+        </div>
       </div>
     </div>
   ) : (
     <div>
       <div className="flex items-center gap-3 text-muted-foreground">
         <Lock className="h-4 w-4" />
-
         <span className="text-sm">
           Documents are NDA-protected. Request access to view.
         </span>
       </div>
 
-      {user?.role === "developer" && (
-        <Button
-  className="mt-4"
-  onClick={async () => {
-    if (!user || user.role !== "developer") {
-      toast.error("Only developers can request access.");
-      return;
-    }
+      <Button
+        className="mt-4"
+        onClick={async () => {
+          if (!user) return;
 
-    const { error } = await supabase
-      .from("project_access_requests")
-      .insert({
-        project_id: project.id,
-        developer_id: user.id,
-        status: "pending",
-      });
+          const { data: existing } = await supabase
+            .from("project_access_requests")
+            .select("id,status")
+            .eq("project_id", project.id)
+            .eq("developer_id", user.id)
+            .maybeSingle();
 
-    if (error) {
-      console.error("REQUEST ACCESS ERROR:", error);
-      toast.error(error.message);
-      return;
-    }
+          if (existing) {
+            setAccessStatus(existing.status);
+            toast.info(`Request is already ${existing.status}.`);
+            return;
+          }
 
-    toast.success("Access request sent to project owner!");
-    setHasDocumentAccess(false);
-  }}
->
-  Request Access
-</Button>
-      )}
+          const { error } = await supabase
+            .from("project_access_requests")
+            .insert({
+              project_id: project.id,
+              developer_id: user.id,
+              status: "pending",
+            });
+
+          if (error) {
+            console.error("REQUEST ACCESS ERROR:", error);
+            toast.error(error.message);
+            return;
+          }
+
+          setAccessStatus("pending");
+          toast.success("Access request sent successfully!");
+        }}
+      >
+        Request Access
+      </Button>
     </div>
   )}
 </TabsContent>
@@ -279,7 +408,74 @@ function Analysis({ a }: { a: AiAnalysis }) {
     </div>
   );
 }
+function DocumentCard({
+  title,
+  type,
+  path,
+  onUrl,
+}: {
+  title: string;
+  type: "PDF" | "PPT";
+  path: string;
+  onUrl: (url: string) => void;
+}) {
+  const [loading, setLoading] = useState(false);
 
+  const openDocument = async () => {
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase.storage
+        .from("project-docs")
+        .createSignedUrl(path, 3600);
+
+      if (error) throw error;
+
+      if (!data?.signedUrl) {
+        throw new Error("Could not create document URL");
+      }
+
+      onUrl(data.signedUrl);
+
+      if (type === "PPT") {
+        window.open(data.signedUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("DOCUMENT URL ERROR:", error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to open document"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-background p-5">
+      <div className="mb-4">
+        <div className="font-semibold">{title}</div>
+        <div className="text-xs text-muted-foreground">
+          NDA Protected • {type}
+        </div>
+      </div>
+
+      <Button
+        onClick={openDocument}
+        disabled={loading}
+        className="gap-2"
+      >
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          "View Document"
+        )}
+      </Button>
+    </div>
+  );
+}
 function Score({ label, value }: { label: string; value?: number }) {
   const v = typeof value === "number" ? value : 0;
   return (
