@@ -51,6 +51,7 @@ type UserProfile = {
   id: string;
   full_name: string | null;
   email: string;
+  role: string;
   approval_status: "pending" | "approved" | "rejected";
   created_at: string;
 };
@@ -97,8 +98,8 @@ function Page() {
       supabase
         .from("profiles")
         .select(
-          "id,full_name,email,approval_status,created_at"
-        )
+  "id,full_name,email,role,approval_status,created_at"
+)
         .order("created_at", { ascending: false }),
     ]);
 
@@ -343,7 +344,27 @@ function Page() {
                   <div className="text-sm text-muted-foreground">
                     {u.email}
                   </div>
+              <div className="mt-1 text-sm">
+  Role:{" "}
+  <span className="font-semibold capitalize">
+    {u.role}
+  </span>
+</div>
 
+<div className="mt-1 text-sm">
+  Approval:{" "}
+  <span
+    className={`font-semibold capitalize ${
+      u.approval_status === "approved"
+        ? "text-primary"
+        : u.approval_status === "rejected"
+        ? "text-destructive"
+        : "text-yellow-600"
+    }`}
+  >
+    {u.approval_status}
+  </span>
+</div>
                   <div className="text-xs text-muted-foreground">
                     Joined{" "}
                     {new Date(
