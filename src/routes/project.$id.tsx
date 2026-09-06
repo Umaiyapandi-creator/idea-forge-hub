@@ -81,7 +81,7 @@ const load = async () => {
       .maybeSingle();
 
     if (requestError) {
-      console.error("ACCESS CHECK ERROR:", requestError);
+      console.error("ACCESS CHECK ERROR:", Error);
       setHasDocumentAccess(false);
     } else {
       setHasDocumentAccess(request?.status === "approved");
@@ -211,9 +211,34 @@ const load = async () => {
       </div>
 
       {user?.role === "developer" && (
-        <Button className="mt-4">
-          Request Access
-        </Button>
+        <Button
+  className="mt-4"
+  onClick={async () => {
+    if (!user || user.role !== "developer") {
+      toast.error("Only developers can request access.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("project_access_requests")
+      .insert({
+        project_id: project.id,
+        developer_id: user.id,
+        status: "pending",
+      });
+
+    if (error) {
+      console.error("REQUEST ACCESS ERROR:", error);
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success("Access request sent to project owner!");
+    setHasDocumentAccess(false);
+  }}
+>
+  Request Access
+</Button>
       )}
     </div>
   )}
