@@ -42,7 +42,7 @@ function Page() {
   const [loading, setLoading] = useState(true);
   const [hasDocumentAccess, setHasDocumentAccess] = useState(false);
   const [promoting, setPromoting] = useState(false);
-  const [accessStatus, setAccessStatus] = useState<
+ const [accessStatus, setAccessStatus] = useState<
   "pending" | "approved" | "rejected" | null
 >(null);
 
@@ -52,103 +52,85 @@ const [documentsLoading, setDocumentsLoading] = useState(false);
 const load = async () => {
   setLoading(true);
 
-  const { data, error } = await supabase
-    .from("data")
-    .select(`
-      id,
-      name,
-      owner_id,
-      industry,
-      funding_needed,
-      problem,
-      solution,
-      public_summary,
-      status,
-      is_priority,
-      is_featured,
-      ai_analysis,
-      ppt_path,
-      pdf_path
-    `)
-    .eq("id", id)
-    .maybeSingle();
-
-  if (error) {
-    console.error("PROJECT LOAD ERROR:", error);
-    toast.error(error.message);
-    setProject(null);
-    setLoading(false);
-    return;
-  }
-
-  setProject(data as ProjectRow | null);
-
-  // Project owner has direct access
-  if (data && user?.id === data.owner_id) {
-    setHasDocumentAccess(true);
-  }
-  // Developer access will be checked separately
-  else if (data && user?.role === "developer") {
-    const { data: request, error: requestError } = await supabase
-      .from("project_access_requests")
-      .select("status")
-      .eq("project_id", data.id)
-      .eq("developer_id", user.id)
+  try {
+    const { data, error } = await supabase
+      .from("data")
+      .select(`
+        id,
+        name,
+        owner_id,
+        industry,
+        funding_needed,
+        problem,
+        solution,
+        public_summary,
+        status,
+        is_priority,
+        is_featured,
+        ai_analysis,
+        ppt_path,
+        pdf_path
+      `)
+      .eq("id", id)
       .maybeSingle();
 
-    if (requestError) {
-      console.error("ACCESS CHECK ERROR:", Error);
-      setHasDocumentAccess(false);
-    } else {
-      setHasDocumentAccess(request?.status === "approved");
+    if (error) {
+      console.error("PROJECT LOAD ERROR:", error);
+      toast.error(error.message);
+      setProject(null);
+      return;
     }
-  } else {
-    setHasDocumentAccess(false);
-  }
 
-  setLoading(false);
-};
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
-  useEffect(() => {
-  if (!user || !id) return;
+    if (!data) {
+      setProject(null);
+      return;
+    }
 
-  const loadAccess = async () => {
-    setDocumentsLoading(true);
+    setProject(data as ProjectRow);
 
-    try {
-      // Project owner always has access
-      if (user.id === project?.owner_id) {
-        setAccessStatus("approved");
-        return;
-      }
+    // OWNER / INNOVATOR → direct access
+    if (user?.id === data.owner_id) {
+      setAccessStatus("approved");
+      return;
+    }
 
-      const { data, error } = await supabase
+    // DEVELOPER → check access request
+    if (user?.role === "developer") {
+      const { data: request, error: requestError } = await supabase
         .from("project_access_requests")
         .select("status")
-        .eq("project_id", id)
+        .eq("project_id", data.id)
         .eq("developer_id", user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("ACCESS STATUS ERROR:", error);
+      if (requestError) {
+        console.error("ACCESS CHECK ERROR:", requestError);
         setAccessStatus(null);
         return;
       }
 
       setAccessStatus(
-        data?.status === "approved" ||
-        data?.status === "pending" ||
-        data?.status === "rejected"
-          ? data.status
+        request?.status === "approved" ||
+        request?.status === "pending" ||
+        request?.status === "rejected"
+          ? request.status
           : null
       );
-    } finally {
-      setDocumentsLoading(false);
-    }
-  };
 
-  loadAccess();
-}, [user, id, project?.owner_id]);
+      return;
+    }
+
+    setAccessStatus(null);
+
+  } finally {
+    setLoading(false);
+  }
+};
+  useEffect(() => {
+  if (!user) return;
+  load();
+}, [id, user]);
+  
 
   if (loading) return <div className="grid min-h-screen place-items-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   if (!project) return <DashboardShell title="Not found"><p className="text-sm text-muted-foreground">Project not found.</p></DashboardShell>;
@@ -330,45 +312,49 @@ const load = async () => {
           Documents are NDA-protected. Request access to view.
         </span>
       </div>
+{user?.role === "developer" && (
+  <Button
+    className="mt-4"
+    onClick={async () => {
+      const { data: existing, error: checkError } = await supabase
+        .from("project_access_requests")
+        .select("id,status")
+        .eq("project_id", project.id)
+        .eq("developer_id", user.id)
+        .maybeSingle();
 
-      <Button
-        className="mt-4"
-        onClick={async () => {
-          if (!user) return;
+      if (checkError) {
+        toast.error(checkError.message);
+        return;
+      }
 
-          const { data: existing } = await supabase
-            .from("project_access_requests")
-            .select("id,status")
-            .eq("project_id", project.id)
-            .eq("developer_id", user.id)
-            .maybeSingle();
+      if (existing) {
+        setAccessStatus(existing.status as "pending" | "approved" | "rejected");
+        toast.info(`Request is already ${existing.status}.`);
+        return;
+      }
 
-          if (existing) {
-            setAccessStatus(existing.status);
-            toast.info(`Request is already ${existing.status}.`);
-            return;
-          }
+      const { error } = await supabase
+        .from("project_access_requests")
+        .insert({
+          project_id: project.id,
+          developer_id: user.id,
+          status: "pending",
+        });
 
-          const { error } = await supabase
-            .from("project_access_requests")
-            .insert({
-              project_id: project.id,
-              developer_id: user.id,
-              status: "pending",
-            });
+      if (error) {
+        console.error("REQUEST ACCESS ERROR:", error);
+        toast.error(error.message);
+        return;
+      }
 
-          if (error) {
-            console.error("REQUEST ACCESS ERROR:", error);
-            toast.error(error.message);
-            return;
-          }
-
-          setAccessStatus("pending");
-          toast.success("Access request sent successfully!");
-        }}
-      >
-        Request Access
-      </Button>
+      setAccessStatus("pending");
+      toast.success("Access request sent to innovator!");
+    }}
+  >
+    Request Access
+  </Button>
+)}
     </div>
   )}
 </TabsContent>
