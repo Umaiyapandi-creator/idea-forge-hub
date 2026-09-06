@@ -31,17 +31,67 @@ function Page() {
   const { isPremium } = usePlan(user?.id);
   const [project, setProject] = useState<ProjectRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasDocumentAccess, setHasDocumentAccess] = useState(false);
   const [promoting, setPromoting] = useState(false);
+const load = async () => {
+  setLoading(true);
 
-  const load = async () => {
-    setLoading(true);
-    const { data } = await supabase.from("data")
-      .select(
-  "id,name,owner_id,industry,funding_needed,problem,solution,public_summary,status,is_priority")
-      .eq("id", id).maybeSingle();
-    setProject(data as ProjectRow | null);
+  const { data, error } = await supabase
+    .from("data")
+    .select(`
+      id,
+      name,
+      owner_id,
+      industry,
+      funding_needed,
+      problem,
+      solution,
+      public_summary,
+      status,
+      is_priority,
+      is_featured,
+      ai_analysis,
+      ppt_path,
+      pdf_path
+    `)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("PROJECT LOAD ERROR:", error);
+    toast.error(error.message);
+    setProject(null);
     setLoading(false);
-  };
+    return;
+  }
+
+  setProject(data as ProjectRow | null);
+
+  // Project owner has direct access
+  if (data && user?.id === data.owner_id) {
+    setHasDocumentAccess(true);
+  }
+  // Developer access will be checked separately
+  else if (data && user?.role === "developer") {
+    const { data: request, error: requestError } = await supabase
+      .from("project_access_requests")
+      .select("status")
+      .eq("project_id", data.id)
+      .eq("developer_id", user.id)
+      .maybeSingle();
+
+    if (requestError) {
+      console.error("ACCESS CHECK ERROR:", requestError);
+      setHasDocumentAccess(false);
+    } else {
+      setHasDocumentAccess(request?.status === "approved");
+    }
+  } else {
+    setHasDocumentAccess(false);
+  }
+
+  setLoading(false);
+};
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
 
   if (loading) return <div className="grid min-h-screen place-items-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
@@ -120,20 +170,54 @@ function Page() {
           )}
         </TabsContent>
 
-        <TabsContent value="docs" className="mt-6 rounded-xl border border-border bg-card p-6">
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <Lock className="h-4 w-4" />
-            <span className="text-sm">Documents are NDA-protected. Request access to view.</span>
-          </div>
-          <Button className="mt-4" onClick={() => toast.success("Access request sent to founder")}>Request access</Button>
-        </TabsContent>
-        <TabsContent value="chat" className="mt-6">
-          {user ? (
-            <ProjectChat projectId={project.id} userId={user.id} />
-          ) : (
-            <p className="text-sm text-muted-foreground">Sign in to chat.</p>
-          )}
-        </TabsContent>
+        <TabsContent
+  value="docs"
+  className="mt-6 rounded-xl border border-border bg-card p-6"
+>
+  {hasDocumentAccess ? (
+    <div className="space-y-4">
+      <h3 className="font-semibold">Project Documents</h3>
+
+      <p className="text-sm text-muted-foreground">
+        You have access to the project documents.
+      </p>
+
+      <div className="flex gap-3">
+        {project.ppt_path && (
+          <Button
+            onClick={() => toast.info("Opening PPT...")}
+          >
+            View PPT
+          </Button>
+        )}
+
+        {project.pdf_path && (
+          <Button
+            onClick={() => toast.info("Opening PDF...")}
+          >
+            View PDF
+          </Button>
+        )}
+      </div>
+    </div>
+  ) : (
+    <div>
+      <div className="flex items-center gap-3 text-muted-foreground">
+        <Lock className="h-4 w-4" />
+
+        <span className="text-sm">
+          Documents are NDA-protected. Request access to view.
+        </span>
+      </div>
+
+      {user?.role === "developer" && (
+        <Button className="mt-4">
+          Request Access
+        </Button>
+      )}
+    </div>
+  )}
+</TabsContent>
         <TabsContent value="team" className="mt-6 rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
           No team members yet.
         </TabsContent>
