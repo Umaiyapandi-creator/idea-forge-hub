@@ -107,45 +107,44 @@ export function ProjectChat({
   }, [messages]);
 
   // Send message
-  const send = async () => {
-    const body = text.trim();
+  
+const send = async () => {
+  const body = text.trim();
 
-    if (!body || sending) return;
+  if (!body || sending) return;
 
-    // Innovator project owner
-    // Developer should send to innovator
-    // Innovator should send to developer
-    const receiverId =
-      userId === ownerId ? null : ownerId;
+  // Developer → Innovator
+  // Innovator → Selected approved Developer
+  const receiverId = selectedDeveloper;
 
-    if (!receiverId) {
-      toast.error(
-        "Chat receiver could not be determined."
-      );
-      return;
-    }
+  if (!receiverId) {
+    toast.error("No chat receiver selected.");
+    return;
+  }
 
-    setSending(true);
+  setSending(true);
 
-    const { error } = await supabase
-      .from("project_messages")
-      .insert({
-        project_id: projectId,
-        sender_id: userId,
-        receiver_id: receiverId,
-        message: body,
-      });
+  const { error } = await supabase
+    .from("project_messages")
+    .insert({
+      project_id: Number(projectId),
+      sender_id: userId,
+      receiver_id: receiverId,
+      message: body,
+    });
 
-    setSending(false);
+  setSending(false);
 
-    if (error) {
-      console.error("CHAT SEND ERROR:", error);
-      toast.error(error.message);
-      return;
-    }
+  if (error) {
+    console.error("CHAT SEND ERROR:", error);
+    toast.error(error.message);
+    return;
+  }
 
-    setText("");
-  };
+  setText("");
+};
+
+
 
   return (
     <div className="flex h-[420px] flex-col rounded-xl border border-border bg-background">
