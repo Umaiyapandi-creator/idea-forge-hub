@@ -111,16 +111,7 @@ export function ProjectChat({
 const send = async () => {
   const body = text.trim();
 
-  if (!body || sending) return;
-
-  // Developer → Innovator
-  // Innovator → Selected approved Developer
-  const receiverId = selectedDeveloper;
-
-  if (!receiverId) {
-    toast.error("No chat receiver selected.");
-    return;
-  }
+  if (!body || sending || !selectedDeveloper) return;
 
   setSending(true);
 
@@ -129,7 +120,7 @@ const send = async () => {
     .insert({
       project_id: Number(projectId),
       sender_id: userId,
-      receiver_id: receiverId,
+      receiver_id: selectedDeveloper,
       message: body,
     });
 
