@@ -30,7 +30,37 @@ export function ProjectChat({
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [selectedDeveloper, setSelectedDeveloper] =
+  useState<string | null>(null);
+const isOwner = userId === ownerId;
 
+useEffect(() => {
+  const loadChatReceiver = async () => {
+    // Developer → Innovator
+    if (!isOwner) {
+      setSelectedDeveloper(ownerId);
+      return;
+    }
+
+    // Innovator → Approved Developer
+    const { data, error } = await supabase
+      .from("project_access_requests")
+      .select("developer_id")
+      .eq("project_id", projectId)
+      .eq("status", "approved")
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("CHAT RECEIVER ERROR:", error);
+      return;
+    }
+
+    setSelectedDeveloper(data?.developer_id ?? null);
+  };
+
+  loadChatReceiver();
+}, [projectId, userId, ownerId, isOwner]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Load messages
@@ -107,11 +137,15 @@ export function ProjectChat({
   }, [messages]);
 
   // Send message
-  
-const send = async () => {
+  const send = async () => {
   const body = text.trim();
 
-  if (!body || sending || !selectedDeveloper) return;
+  if (!body || sending) return;
+
+  if (!selectedDeveloper) {
+    toast.error("Chat receiver could not be determined.");
+    return;
+  }
 
   setSending(true);
 
@@ -134,7 +168,6 @@ const send = async () => {
 
   setText("");
 };
-
 
 
   return (
