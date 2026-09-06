@@ -358,6 +358,30 @@ const load = async () => {
     </div>
   )}
 </TabsContent>
+        <TabsContent
+  value="chat"
+  className="mt-6 rounded-xl border border-border bg-card p-6"
+>
+  {isOwner || accessStatus === "approved" ? (
+    <ProjectChat
+      projectId={String(project.id)}
+      userId={user.id}
+      ownerId={project.owner_id}
+    />
+  ) : (
+    <div className="rounded-lg border border-dashed p-6 text-center">
+      <Lock className="mx-auto mb-3 h-6 w-6 text-muted-foreground" />
+
+      <h3 className="font-semibold">
+        Chat is locked
+      </h3>
+
+      <p className="mt-1 text-sm text-muted-foreground">
+        Chat is available after the innovator approves your access request.
+      </p>
+    </div>
+  )}
+</TabsContent>
         <TabsContent value="team" className="mt-6 rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">
           No team members yet.
         </TabsContent>
