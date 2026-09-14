@@ -59,21 +59,16 @@ export const chatWithAssistant = createServerFn({ method: "POST" })
       );
 
       if (!res.ok) {
-        const errorText = await res.text().catch(() => "");
+  const errorText = await res.text().catch(() => "");
 
-        console.error(
-          "Gemini API error:",
-          res.status,
-          errorText,
-        );
+  console.error("GEMINI API ERROR STATUS:", res.status);
+  console.error("GEMINI API ERROR BODY:", errorText);
 
-        return {
-          reply:
-            "Sorry, I couldn't reach the AI service. Please try again.",
-          error: "gateway_error" as const,
-        };
-      }
-
+  return {
+    reply: `Gemini API error (${res.status}). Please check the server logs.`,
+    error: "gateway_error" as const,
+  };
+}
       const json = (await res.json()) as {
         candidates?: Array<{
           content?: {
