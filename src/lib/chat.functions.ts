@@ -25,27 +25,21 @@ export const chatWithAssistant = createServerFn({ method: "POST" })
     const systemPrompt =
       "You are the friendly AI assistant for Way to Dream, a platform " +
       "connecting innovators, developers, and investors. " +
-      "Help users navigate the platform, explain features such as idea uploads, " +
-      "NDA-protected documents, developer access requests, investor requests, " +
-      "dashboards, profiles, and project management. " +
+      "Help users navigate the platform, explain idea uploads, " +
+      "developer access requests, investor requests, dashboards, " +
+      "profiles, and project management. " +
       "Keep replies concise, friendly, and easy to understand.";
 
     try {
-      const contents = [
-        {
-          role: "user",
-          parts: [{ text: systemPrompt }],
-        },
-        ...data.messages
-          .filter((message) => message.role !== "system")
-          .map((message) => ({
-            role: message.role === "assistant" ? "model" : "user",
-            parts: [{ text: message.content }],
-          })),
-      ];
+      const contents = data.messages
+        .filter((message) => message.role !== "system")
+        .map((message) => ({
+          role: message.role === "assistant" ? "model" : "user",
+          parts: [{ text: message.content }],
+        }));
 
       const res = await fetch(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
         {
           method: "POST",
           headers: {
@@ -53,22 +47,30 @@ export const chatWithAssistant = createServerFn({ method: "POST" })
             "x-goog-api-key": apiKey,
           },
           body: JSON.stringify({
+            systemInstruction: {
+              parts: [
+                {
+                  text: systemPrompt,
+                },
+              ],
+            },
             contents,
           }),
         },
       );
 
       if (!res.ok) {
-  const errorText = await res.text().catch(() => "");
+        const errorText = await res.text().catch(() => "");
 
-  console.error("GEMINI API ERROR STATUS:", res.status);
-  console.error("GEMINI API ERROR BODY:", errorText);
+        console.error("GEMINI STATUS:", res.status);
+        console.error("GEMINI ERROR:", errorText);
 
-  return {
-    reply: `Gemini API error (${res.status}). Please check the server logs.`,
-    error: "gateway_error" as const,
-  };
-}
+        return {
+          reply: `Gemini API error (${res.status}).`,
+          error: "gateway_error" as const,
+        };
+      }
+
       const json = (await res.json()) as {
         candidates?: Array<{
           content?: {
@@ -88,8 +90,7 @@ export const chatWithAssistant = createServerFn({ method: "POST" })
       console.error("Gemini request failed:", error);
 
       return {
-        reply:
-          "Something went wrong while connecting to the AI service.",
+        reply: "Something went wrong while connecting to the AI service.",
         error: "request_failed" as const,
       };
     }
