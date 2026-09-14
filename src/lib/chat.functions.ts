@@ -99,4 +99,3 @@ export const chatWithAssistant = createServerFn({ method: "POST" })
       };
     }
   });
-```
